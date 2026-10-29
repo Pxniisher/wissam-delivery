@@ -104,25 +104,34 @@ async function loadMyOrders(userId) {
   box.innerHTML=data.map(row=>{const o=formatOrder(row);return '<div class="order"><div class="orderhead"><b>'+esc(o.type)+' · '+esc(o.pickup)+'</b><span class="badge">'+esc(o.status)+'</span></div><p><b>Livraison :</b> '+esc(o.dropoff)+'<br><b>Prix proposé :</b> '+money(o.offer)+(o.details?'<br><b>Détails :</b> '+esc(o.details):'')+'</p></div>';}).join("");
 }
 document.addEventListener("wissam:createOrder", async()=>{
-  const {data:{session}}=await supabase.auth.getSession();
-  if(!session){authMessage("Connectez-vous avant d’envoyer une demande.",true);return;}
-  const scheduled=$("timing").value!=="Maintenant";
-  let scheduledAt=null;
-  if(scheduled && $("date").value) {
-    const hour=Number(($("slot").value.match(/\\d{2}/)||["09"])[0]);
-    scheduledAt=new Date($("date").value+"T"+String(hour).padStart(2,"0")+":00:00").toISOString();
-  }
-  const price=Number($("price").value);
-  if(!Number.isFinite(price)||price<=0){authMessage("Indiquez un prix valide supérieur à zéro.",true);return;}
   const button=document.querySelector("#orderForm button[type=submit]");
-  button.disabled=true;button.textContent="Enregistrement…";
-  const payload={client_id:session.user.id,pickup_address:$("pickup").value.trim(),delivery_address:$("dropoff").value.trim(),description:$("type").value+"\\n"+$("details").value.trim(),proposed_price:price,scheduled_at:scheduledAt};
-  const {data,error}=await supabase.from("orders").insert(payload).select("*").single();
-  button.disabled=false;button.textContent="Envoyer ma demande";
-  if(error){authMessage("La demande n’a pas été enregistrée : "+error.message,true);return;}
-  authMessage("Votre demande a été enregistrée dans Supabase.");
-  $("orderForm").reset();
-  await loadMyOrders(session.user.id);
+  try {
+    const {data:{session},error:sessionError}=await supabase.auth.getSession();
+    if(sessionError) throw sessionError;
+    if(!session){authMessage("Connectez-vous avant d’envoyer une demande.",true);return;}
+    if(!$("pickup").value.trim() || !$("dropoff").value.trim()){authMessage("Renseignez le lieu de retrait et l’adresse de livraison.",true);return;}
+    const scheduled=$("timing").value!=="Maintenant";
+    let scheduledAt=null;
+    if(scheduled) {
+      if(!$("date").value){authMessage("Choisissez une date pour la réservation.",true);return;}
+      const match=$("slot").value.match(/\d{2}/);
+      const hour=Number((match||["09"])[0]);
+      scheduledAt=new Date($("date").value+"T"+String(hour).padStart(2,"0")+":00:00").toISOString();
+    }
+    const price=Number($("price").value);
+    if(!Number.isFinite(price)||price<=0){authMessage("Indiquez un prix valide supérieur à zéro.",true);return;}
+    button.disabled=true;button.textContent="Enregistrement…";
+    const payload={client_id:session.user.id,pickup_address:$("pickup").value.trim(),delivery_address:$("dropoff").value.trim(),description:$("type").value+"\n"+$("details").value.trim(),proposed_price:price,scheduled_at:scheduledAt};
+    const {error}=await supabase.from("orders").insert(payload);
+    if(error) throw error;
+    authMessage("Votre demande a été enregistrée dans Supabase.");
+    $("orderForm").reset();
+    await loadMyOrders(session.user.id);
+  } catch(error) {
+    authMessage("Impossible d’envoyer la demande : "+(error?.message||"erreur inconnue")+". Vérifiez votre connexion puis réessayez.",true);
+  } finally {
+    button.disabled=false;button.textContent="Envoyer ma demande";
+  }
 });
 function authMessage(message, isError=false) {
   const el=$("authMessage"); el.textContent=message;
