@@ -169,7 +169,7 @@ header:after{content:"";position:absolute;right:-70px;top:-130px;width:320px;hei
 <div class="tabs"><button class="tab active" data-view="client">🛍️ Espace client</button><button class="tab hidden" data-view="driver" aria-hidden="true">🛵 Espace livreur</button><button class="tab hidden" data-view="admin" aria-hidden="true">🛡️ Administration</button></div>
 <section id="client" class="view">
 <div class="grid">
-<div class="card"><h3>Créer une demande</h3><p class="sub">Décrivez votre course et proposez le montant que vous souhaitez payer pour la livraison.</p>
+<div class="card" id="createRequestCard"><h3>Créer une demande</h3><p class="sub">Décrivez votre course et proposez le montant que vous souhaitez payer pour la livraison.</p>
 <form id="orderForm" onsubmit="return false;">
 <label>Type de demande</label><select id="type"><option>Restaurant / repas</option><option>Courses / drive</option><option>Magasin / jeu vidéo</option><option>Colis / retrait</option><option>Autre demande</option></select>
 <label>Restaurant, magasin ou lieu de retrait</label><input id="pickup" placeholder="Ex. McDonald's Rouen, Leclerc Drive…" required>
@@ -181,7 +181,7 @@ header:after{content:"";position:absolute;right:-70px;top:-130px;width:320px;hei
 </form>
 <div class="card" style="margin-top:18px"><h3>Mes demandes</h3><p class="sub">Retrouvez ici les commandes enregistrées sur votre compte.</p><div id="myOrders"><p class="small">Connectez-vous pour voir vos demandes.</p></div></div><div class="notice">Le prix indiqué concerne la course du livreur. Le coût des achats et leur mode de règlement doivent être convenus séparément.</div><div class="card" id="courierApplyCard" style="margin-top:18px"><h3>🛵 Devenir livreur</h3><p class="sub">Vous pouvez demander à rejoindre Wissam Delivery comme livreur. Votre accès sera activé uniquement après validation de l’administrateur.</p><div id="courierApplyForm"><label for="courierApplyName">Nom complet</label><input id="courierApplyName" autocomplete="name" placeholder="Votre nom complet"><label for="courierApplyPhone">Téléphone</label><input id="courierApplyPhone" type="tel" autocomplete="tel" placeholder="Votre numéro de téléphone"><label for="courierApplyExperience">Expérience et zone de livraison (facultatif)</label><textarea id="courierApplyExperience" placeholder="Expérience, ville, disponibilité…"></textarea><div class="actions"><button class="btn" id="courierApplyBtn" type="button">Envoyer ma candidature</button></div></div><div id="courierApplyStatus" class="notice">Connectez-vous pour demander l’accès livreur.</div></div>
 </div>
-<div class="card"><h3>📍 Suivi de livraison en direct</h3><p class="sub">La carte réelle s’affiche pendant une livraison active.</p><div id="clientLiveTracking"><p class="small">Aucune livraison en cours avec suivi GPS.</p></div></div>
+<div class="card" id="clientTrackingCard"><h3>📍 Suivi de livraison en direct</h3><p class="sub">La carte réelle s’affiche pendant une livraison active.</p><div id="clientLiveTracking"><p class="small">Aucune livraison en cours avec suivi GPS.</p></div></div>
 </div>
 </section>
 <section id="driver" class="view hidden"><div class="grid">
@@ -432,6 +432,9 @@ function authMessage(message, isError=false) {
 }
 let currentRole = null;
 function applyAccess(session) {
+  // Ces deux fonctionnalités sont réservées aux utilisateurs connectés.
+  document.getElementById("createRequestCard")?.classList.toggle("hidden", !session);
+  document.getElementById("clientTrackingCard")?.classList.toggle("hidden", !session);
   const tabs = document.querySelectorAll(".tabs .tab");
   const role = currentRole || "client";
   tabs.forEach(tab => {
