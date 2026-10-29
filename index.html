@@ -68,7 +68,7 @@ label{display:block;font-size:13px;font-weight:700;margin:13px 0 6px}input,selec
 </main><footer>Wissam Delivery · Les comptes sont gérés par Supabase. Les commandes restent en mode démonstration jusqu’à la prochaine étape.</footer>
 <script>
 let orders=[],online=false,seq=1;
-function switchView(v){document.querySelectorAll('.view').forEach(e=>e.classList.toggle('hidden',e.id!==v));document.querySelectorAll('.tab').forEach(e=>e.classList.toggle('active',e.dataset.view===v));}
+window.wissamRole='client';window.wissamHasSession=false;function switchView(v){const role=window.wissamRole||'client';const allowed=v==='client'||(window.wissamHasSession&&v==='driver'&&role==='courier')||(window.wissamHasSession&&v==='admin'&&role==='admin');if(!allowed)v='client';document.querySelectorAll('.view').forEach(e=>e.classList.toggle('hidden',e.id!==v));document.querySelectorAll('.tabs .tab').forEach(e=>e.classList.toggle('active',e.dataset.view===v));}
 document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>switchView(b.dataset.view)));
 document.getElementById('orderForm').addEventListener('submit',e=>{e.preventDefault();document.dispatchEvent(new CustomEvent('wissam:createOrder'));});
 function money(n){return Number(n).toLocaleString('fr-FR',{style:'currency',currency:'EUR'});}
@@ -149,16 +149,20 @@ function applyAccess(session) {
   }
 }
 async function showSession(session) {
+  window.wissamHasSession=!!session;
   $("authLoggedOut").classList.toggle("hidden",!!session);
   $("authLoggedIn").classList.toggle("hidden",!session);
   currentRole = "client";
   if (session) {
     const { data } = await supabase.from("profiles").select("role").eq("id", session.user.id).maybeSingle();
     currentRole = data?.role || "client";
+    window.wissamRole=currentRole;
     const email=session.user.email || "";
     $("authWelcome").textContent="Connecté : "+email;
     authMessage("Compte connecté. Votre espace est limité à votre rôle : "+currentRole+".");
   } else {
+    currentRole = "client";
+    window.wissamRole="client";
     $("authWelcome").textContent="";
   }
   applyAccess(session);
