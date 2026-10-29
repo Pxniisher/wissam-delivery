@@ -174,14 +174,17 @@ window.wissamCourierAccept=async function(id) {
 
 
 async function loadCourierApplication(userId, role) {
-  const form=$("courierApplyForm"), status=$("courierApplyStatus"), card=$("courierApplyCard");
+  const form=$("courierApplyForm"), status=$("courierApplyStatus");
   if(!userId){form?.classList.add("hidden");status.textContent="Connectez-vous pour demander l’accès livreur.";return;}
   if(role==="courier"){form?.classList.add("hidden");status.textContent="Votre candidature est validée : votre espace livreur est activé.";return;}
-  const {data,error}=await supabase.from("courier_applications").select("status,created_at").eq("user_id",userId).maybeSingle();
-  if(error){status.textContent="Impossible de vérifier votre candidature pour le moment.";return;}
-  if(data){form?.classList.add("hidden");status.textContent=data.status==="pending"?"Votre candidature est en attente de validation par l’administrateur.":data.status==="approved"?"Candidature validée. Déconnectez-vous puis reconnectez-vous pour actualiser votre accès.":"Votre candidature a été refusée. Vous pouvez contacter l’administrateur.";return;}
+  // Keep the application form visible while checking whether this user already applied.
   form?.classList.remove("hidden");
+  status.textContent="Vérification de votre candidature…";
   $("courierApplyName").value=$("authName").value.trim()||"";
+  const {data,error}=await supabase.from("courier_applications").select("status,created_at").eq("user_id",userId).maybeSingle();
+  if(error){status.textContent="Le formulaire reste disponible. Si vous avez déjà envoyé une candidature, son statut n’a pas pu être vérifié.";return;}
+  if(data){form?.classList.add("hidden");status.textContent=data.status==="pending"?"Votre candidature est en attente de validation par l’administrateur.":data.status==="approved"?"Candidature validée. Déconnectez-vous puis reconnectez-vous pour actualiser votre accès.":"Votre candidature a été refusée. Vous pouvez contacter l’administrateur.";return;}
+  status.textContent="Vous pouvez envoyer votre candidature. Votre accès livreur sera activé après validation de l’administrateur.";
 }
 async function loadCourierApplications(){
  const box=$("courierApplications"); if(!box||window.wissamRole!=="admin")return;
