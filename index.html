@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="fr">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#0b0b0c"><meta name="description" content="Wissam Delivery : vos courses, votre prix, votre livreur."><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon.svg" type="image/svg+xml">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#0b0b0c"><meta name="description" content="Wissam Delivery : vos courses, votre prix, votre livreur."><link rel="manifest" href="manifest.webmanifest"><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><link rel="icon" href="icon.svg" type="image/svg+xml">
 <title>Wissam Delivery</title>
 <style>
 :root{--navy:#12243a;--blue:#2864e8;--cyan:#dff4f2;--bg:#f4f7fb;--muted:#66758a;--line:#e5ebf3;--white:#fff;--green:#168568;--orange:#ffb84d}
@@ -150,7 +150,7 @@ header:after{content:"";position:absolute;right:-70px;top:-130px;width:320px;hei
 </form>
 <div class="card" style="margin-top:18px"><h3>Mes demandes</h3><p class="sub">Retrouvez ici les commandes enregistrées sur votre compte.</p><div id="myOrders"><p class="small">Connectez-vous pour voir vos demandes.</p></div></div><div class="notice">Le prix indiqué concerne la course du livreur. Le coût des achats et leur mode de règlement doivent être convenus séparément.</div><div class="card" id="courierApplyCard" style="margin-top:18px"><h3>🛵 Devenir livreur</h3><p class="sub">Vous pouvez demander à rejoindre Wissam Delivery comme livreur. Votre accès sera activé uniquement après validation de l’administrateur.</p><div id="courierApplyForm"><label for="courierApplyName">Nom complet</label><input id="courierApplyName" autocomplete="name" placeholder="Votre nom complet"><label for="courierApplyPhone">Téléphone</label><input id="courierApplyPhone" type="tel" autocomplete="tel" placeholder="Votre numéro de téléphone"><label for="courierApplyExperience">Expérience et zone de livraison (facultatif)</label><textarea id="courierApplyExperience" placeholder="Expérience, ville, disponibilité…"></textarea><div class="actions"><button class="btn" id="courierApplyBtn" type="button">Envoyer ma candidature</button></div></div><div id="courierApplyStatus" class="notice">Connectez-vous pour demander l’accès livreur.</div></div>
 </div>
-<div class="card"><h3>Suivi de livraison</h3><p class="sub">La carte ci-dessous est une illustration. Le suivi GPS réel sera ajouté dans une prochaine version.</p><div class="map"><div class="maplabel" style="top:18px;left:16px">📍 Retrait</div><div class="maplabel" style="right:15px;bottom:18px">🏠 Livraison</div><div class="pin"><span>W</span></div></div><div class="notice">📡 Le partage de position devra être activé uniquement pendant une course, avec l’autorisation du livreur.</div></div>
+<div class="card"><h3>📍 Suivi de livraison en direct</h3><p class="sub">La carte réelle s’affiche pendant une livraison active.</p><div id="clientLiveTracking"><p class="small">Aucune livraison en cours avec suivi GPS.</p></div></div>
 </div>
 </section>
 <section id="driver" class="view hidden"><div class="grid">
@@ -405,4 +405,42 @@ const {data:{session}}=await supabase.auth.getSession();
 showSession(session);
 </script>
 
+
+<script>
+(function(){
+ const maps={}; let watchId=null, activeId=null;
+ async function showLiveOrders(){
+  const root=document.getElementById("clientLiveTracking"); if(!root||!window.wissamHasSession)return;
+  const {data:{session}}=await window.supabase?.auth?.getSession?.() || {data:{session:null}};
+ }
+ window.wissamGpsStart=async function(orderId){
+  const {data:{session}}=await supabase.auth.getSession();
+  if(!session||!navigator.geolocation){alert("Connectez-vous et autorisez la géolocalisation.");return;}
+  if(!confirm("Partager votre position GPS avec le client pendant cette livraison ?"))return;
+  const {error}=await supabase.from("orders").update({status:"in_progress",courier_id:session.user.id}).eq("id",orderId).eq("status","accepted");
+  if(error){alert("Impossible de démarrer : "+error.message);return;}
+  if(watchId!==null)navigator.geolocation.clearWatch(watchId);
+  activeId=orderId;
+  watchId=navigator.geolocation.watchPosition(async p=>{
+   const {error:e}=await supabase.from("delivery_locations").upsert({order_id:activeId,courier_id:session.user.id,latitude:p.coords.latitude,longitude:p.coords.longitude,updated_at:new Date().toISOString()},{onConflict:"order_id"});
+   if(e)console.error("GPS:",e.message);
+  },e=>alert("GPS indisponible : "+e.message),{enableHighAccuracy:true,maximumAge:5000,timeout:15000});
+  await loadRoleOrders();
+ };
+ window.wissamGpsFinish=async function(orderId){
+  if(watchId!==null)navigator.geolocation.clearWatch(watchId);watchId=null;activeId=null;
+  const {error}=await supabase.from("orders").update({status:"delivered"}).eq("id",orderId).eq("status","in_progress");
+  if(error){alert("Impossible de terminer : "+error.message);return;}
+  await supabase.from("delivery_locations").delete().eq("order_id",orderId);
+  await loadRoleOrders();
+ };
+ window.wissamGpsClientMap=async function(orderId,el){
+  if(!window.L||!el)return;
+  const map=L.map(el).setView([46.6,2.4],5);L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:"© OpenStreetMap"}).addTo(map);
+  const paint=d=>{if(!d)return;const p=[d.latitude,d.longitude];if(!map.marker)map.marker=L.marker(p).addTo(map).bindPopup("Livreur en route");else map.marker.setLatLng(p);map.setView(p,15);};
+  const {data}=await supabase.from("delivery_locations").select("latitude,longitude").eq("order_id",orderId).maybeSingle();paint(data);
+  supabase.channel("gps-"+orderId).on("postgres_changes",{event:"*",schema:"public",table:"delivery_locations",filter:"order_id=eq."+orderId},e=>paint(e.new)).subscribe();
+ };
+})();
+</script>
 <script>if ("serviceWorker" in navigator && location.protocol.startsWith("http")) { window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js").catch(()=>{})); }</script></body></html>
