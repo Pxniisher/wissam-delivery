@@ -207,8 +207,7 @@ async function loadMyOrders(userId) {
    activeGps.forEach(row=>{const el=$("gps-live-map-"+row.id);if(el)window.wissamInitGpsMap(row.id,el);});
   }
  }
- data.filter(row=>row.status==="in_progress").forEach(row=>{const el=$("gps-map-"+row.id);if(el)window.wissamInitGpsMap(row.id,el);});
-}
+ }
 window.wissamPayOnline = async function(orderId){
   const msg=$("authMessage"); if(msg){msg.textContent="Préparation du paiement sécurisé…";msg.style.color="";}
   try { const {data,error}=await supabase.functions.invoke("stripe-checkout",{body:{order_id:orderId,method:"online"}}); if(error) throw error; if(!data?.url) throw new Error(data?.error||"Lien de paiement indisponible."); window.location.href=data.url; }
@@ -256,7 +255,6 @@ function orderCardFromDb(row, adminMode=false) {
  const statusOptions=[["pending","À examiner"],["accepted","Acceptée"],["counteroffer","Contre-proposition"],["rejected","Refusée"],["in_progress","En cours"],["delivered","Terminée"],["cancelled","Annulée"]];
  const paymentLabel=row.payment_status==="paid"?"Payé":row.payment_status==="pending"?"En attente de confirmation":row.payment_status==="failed"?"Échec du paiement":row.payment_status==="refunded"?"Remboursé":row.payment_method==="cash"?"Paiement en main propre":"Non réglé";
  const driverActions=row.status==="pending"?'<button class="btn" onclick="window.wissamCourierAccept(\''+row.id+'\')">Accepter cette course</button>':row.status==="accepted"?'<button class="btn" onclick="window.wissamGpsStart(\''+row.id+'\')">📍 Commencer la livraison</button>':row.status==="in_progress"?'<button class="btn" onclick="window.wissamGpsResume(\''+row.id+'\')">📍 Activer le suivi GPS</button><button class="btn secondary" onclick="window.wissamGpsFinish(\''+row.id+'\')">Terminer la livraison</button>':'';
- const map=row.status==="in_progress"&&!adminMode?'<div id="gps-map-'+row.id+'" style="height:240px;border-radius:12px;overflow:hidden;margin-top:12px"></div>':'';
  return '<div class="order"><div class="orderhead"><b>'+esc(o.type)+' · '+esc(o.pickup)+'</b><span class="badge '+(row.status==="pending"?"pending":"")+'">'+esc(o.status)+'</span></div><p><b>Livraison :</b> '+esc(o.dropoff)+'<br><b>Prix proposé :</b> '+money(o.offer)+'<br><b>Client :</b> '+esc(row.client_id.slice(0,8))+'…<br><b>Créée le :</b> '+esc(new Date(row.created_at).toLocaleString("fr-FR"))+(o.details?'<br><b>Détails :</b> '+esc(o.details):'')+(adminMode?'<br><b>Paiement :</b> <strong>'+paymentLabel+'</strong>':'')+'</p>'+map+(adminMode?'<label>Modifier le statut</label><div class="row"><select id="admin-status-'+row.id+'">'+statusOptions.map(([v,l])=>'<option value="'+v+'" '+(row.status===v?'selected':'')+'>'+l+'</option>').join('')+'</select><button class="btn" onclick="window.wissamAdminUpdateOrder(\''+row.id+'\')">Enregistrer</button></div><div class="actions">'+(row.status==='accepted'?'<button class="btn" onclick="window.wissamGpsStart(\''+row.id+'\')">📍 Commencer la livraison</button>':row.status==='in_progress'?'<button class="btn" onclick="window.wissamGpsResume(\''+row.id+'\')">📍 Activer le suivi GPS</button><button class="btn secondary" onclick="window.wissamGpsFinish(\''+row.id+'\')">Terminer la livraison</button>':'')+'</div>':'<div class="actions">'+driverActions+'</div>')+'</div>';
 }
 
