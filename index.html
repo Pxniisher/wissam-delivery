@@ -78,6 +78,22 @@ header:after{content:"";position:absolute;right:-70px;top:-130px;width:320px;hei
 .hero-float span{color:#e6dcc7}.float-top{top:19px;right:0}.float-bottom{bottom:15px;left:0}.float-bottom span{font-size:10px;line-height:1.6}.float-bottom .float-icon{display:grid;place-items:center;width:30px;height:30px;border-radius:9px;background:#3a2d16;color:#edcd79;font-size:18px}
 @media(max-width:760px){.premium-hero{grid-template-columns:1fr;gap:6px;padding:28px 22px 22px;min-height:unset}.hero-copy h2{font-size:39px}.hero-art{min-height:235px;margin-top:4px}.hero-medallion{width:155px;height:155px}.medallion-w{font-size:68px}.float-top{right:2px;top:8px}.float-bottom{left:0;bottom:6px}.hero-trust{gap:10px}.brand h1{font-size:21px}}
 
+
+/* Liste des commandes du client : défilement dans un bloc dédié */
+#myOrders{
+  max-height: 440px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 2px 8px 2px 0;
+  scrollbar-width: thin;
+  scrollbar-color: #b88932 #211e18;
+  overscroll-behavior: contain;
+}
+#myOrders::-webkit-scrollbar{width:9px}
+#myOrders::-webkit-scrollbar-track{background:#211e18;border-radius:10px}
+#myOrders::-webkit-scrollbar-thumb{background:linear-gradient(180deg,#f0d78f,#b88932);border-radius:10px;border:2px solid #211e18}
+#myOrders::-webkit-scrollbar-thumb:hover{background:#f0d78f}
+
 </style>
 </head>
 <body>
