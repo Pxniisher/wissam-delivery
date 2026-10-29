@@ -91,16 +91,38 @@ function authMessage(message, isError=false) {
   el.style.background=isError?"#fff0f0":"#f0f7ff";
   el.style.color=isError?"#b42318":"#305477";
 }
-function showSession(session) {
+let currentRole = null;
+function applyAccess(session) {
+  const tabs = document.querySelectorAll(".tabs .tab");
+  const role = currentRole || "client";
+  tabs.forEach(tab => {
+    const view = tab.dataset.view;
+    const allowed = view === "client" || (view === "driver" && role === "courier") || (view === "admin" && role === "admin");
+    tab.classList.toggle("hidden", !allowed);
+  });
+  document.querySelectorAll(".view").forEach(view => {
+    const allowed = view.id === "client" || (view.id === "driver" && role === "courier") || (view.id === "admin" && role === "admin");
+    if (!allowed) view.classList.add("hidden");
+  });
+  if (!session || (role !== "courier" && role !== "admin")) {
+    document.querySelectorAll(".tabs .tab").forEach(t => t.classList.toggle("active", t.dataset.view === "client"));
+    document.querySelectorAll(".view").forEach(v => v.classList.toggle("hidden", v.id !== "client"));
+  }
+}
+async function showSession(session) {
   $("authLoggedOut").classList.toggle("hidden",!!session);
   $("authLoggedIn").classList.toggle("hidden",!session);
-  if(session) {
+  currentRole = "client";
+  if (session) {
+    const { data } = await supabase.from("profiles").select("role").eq("id", session.user.id).maybeSingle();
+    currentRole = data?.role || "client";
     const email=session.user.email || "";
     $("authWelcome").textContent="Connecté : "+email;
-    authMessage("Compte connecté. La connexion est active sur cet appareil. La sauvegarde des commandes sera reliée à ce compte à l’étape suivante.");
+    authMessage("Compte connecté. Votre espace est limité à votre rôle : "+currentRole+".");
   } else {
     $("authWelcome").textContent="";
   }
+  applyAccess(session);
 }
 $("signupBtn").addEventListener("click",async()=>{
   const name=$("authName").value.trim(), email=$("authEmail").value.trim(), password=$("authPassword").value;
@@ -125,7 +147,9 @@ $("loginBtn").addEventListener("click",async()=>{
 $("logoutBtn").addEventListener("click",async()=>{
   const {error}=await supabase.auth.signOut();
   if(error){authMessage(error.message,true);return;}
-  showSession(null);authMessage("Vous êtes déconnecté.");
+  currentRole = null;
+  await showSession(null);
+  authMessage("Vous êtes déconnecté. Les espaces livreur et administration sont masqués.");
 });
 supabase.auth.onAuthStateChange((_event,session)=>showSession(session));
 const {data:{session}}=await supabase.auth.getSession();
