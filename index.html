@@ -96,15 +96,14 @@ header:after{content:"";position:absolute;right:-70px;top:-130px;width:320px;hei
 
 
 .service-info{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;margin:28px 0 34px}
-.service-info-card{position:relative;overflow:hidden;display:flex;gap:15px;align-items:flex-start;background:linear-gradient(145deg,#172f4d 0%,#0d1b2d 100%);color:#fff;border:1px solid #355273;border-radius:22px;padding:23px 21px;box-shadow:0 14px 32px #10253d24;transition:transform .2s ease,box-shadow .2s ease}
-.service-info-card:before{content:"";position:absolute;width:150px;height:150px;border-radius:50%;right:-65px;top:-75px;background:#4c8cff18;pointer-events:none}
-.service-info-card:hover{transform:translateY(-3px);box-shadow:0 18px 36px #10253d30}
-.service-info-icon{position:relative;flex:0 0 46px;width:46px;height:46px;border-radius:15px;background:linear-gradient(145deg,#dff4f2,#a9d9e7);color:#153452;display:grid;place-items:center;font-size:22px;box-shadow:0 5px 14px #0002}
-.service-info-card h3{position:relative;margin:2px 0 10px;font-size:16px;line-height:1.35;color:#fff}
-.service-info-card p{position:relative;margin:0;color:#d0dced;font-size:14px;line-height:1.7}
-.service-info-card strong{color:#fff;font-weight:800}
-.service-payment{border-color:#2b8b79;background:linear-gradient(145deg,#124d4c 0%,#102d3c 100%)}
-.service-payment:before{background:#53e0b018}
+.service-info-card{position:relative;isolation:isolate;overflow:hidden;display:flex;gap:15px;align-items:flex-start;background:radial-gradient(ellipse at 100% 0%,#3b2c14 0%,#1c1811 38%,#111112 78%);color:#fff7e5;border:1px solid #6f542b;border-radius:22px;padding:23px 21px;box-shadow:0 16px 34px #0003;transition:transform .2s ease,box-shadow .2s ease}
+.service-info-card:before{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(115deg,#ffffff03,transparent 48%,#d4a94b0a);pointer-events:none}
+.service-info-card:hover{transform:translateY(-3px);box-shadow:0 20px 38px #0004}
+.service-info-icon{position:relative;flex:0 0 46px;width:46px;height:46px;border:1px solid #8e6b32;border-radius:15px;background:linear-gradient(135deg,#f3d993,#bd8c37);color:#17120a;display:grid;place-items:center;font-size:22px;box-shadow:0 8px 20px #bd8c3720}
+.service-info-card h3{position:relative;margin:2px 0 10px;font-family:Georgia,'Times New Roman',serif;font-weight:600;font-size:18px;line-height:1.35;color:#fff7e5}
+.service-info-card p{position:relative;margin:0;color:#c4b9a3;font-size:14px;line-height:1.75}
+.service-info-card strong{color:#e0bd68;font-weight:800}
+.service-payment{border-color:#8e6b32;background:radial-gradient(ellipse at 100% 0%,#3b2c14 0%,#1c1811 38%,#111112 78%)}
 @media(max-width:850px){.service-info{grid-template-columns:1fr;gap:13px}.service-info-card{padding:19px;border-radius:19px}}
 @media(prefers-reduced-motion:reduce){.service-info-card{transition:none}.service-info-card:hover{transform:none}}
 
