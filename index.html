@@ -181,7 +181,7 @@ render();
 
 <script type="module">
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
-const supabase = createClient("https://mobwsldiewxwzzukrrbr.supabase.co", "sb_publishable_VrewERrzwE79fzyD1Lghig_mhUP1hkT");
+const supabase = createClient("https://mobwsldiewxwzzukrrbr.supabase.co", "sb_publishable_VrewERrzwE79fzyD1Lghig_mhUP1hkT", { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, storage: window.localStorage } });
 const $ = (id) => document.getElementById(id);
 function statusLabel(status) {
   return ({pending:"À examiner",accepted:"Acceptée",counteroffer:"Contre-proposition",rejected:"Refusée",in_progress:"En cours",delivered:"Terminée",cancelled:"Annulée"})[status] || status;
@@ -313,6 +313,7 @@ window.wissamInitGpsMap=async function(id,el){
  supabase.channel("gps-client-"+id).on("postgres_changes",{event:"*",schema:"public",table:"delivery_locations",filter:"order_id=eq."+id},e=>paint(e.new)).subscribe();
 };
 async function loadRoleOrders() {
+  try {
   const role=window.wissamRole;
   if(role==="admin") {
     const box=$("adminOrders"); box.textContent="Chargement des commandes…";
@@ -328,6 +329,7 @@ async function loadRoleOrders() {
     $("pendingCount").textContent=data.length;
     box.innerHTML=data.length?data.map(o=>orderCardFromDb(o,false)).join(""):'<p class="small">Aucune course disponible pour le moment.</p>';
   }
+  } catch(e) { const box=window.wissamRole==="admin"?$("adminOrders"): $("driverOrders"); if(box) box.textContent="Erreur de chargement : "+(e?.message||"réessayez après actualisation."); }
 }
 window.wissamAdminUpdateOrder=async function(id) {
   const select=$("admin-status-"+id); if(!select)return;
