@@ -107,6 +107,18 @@ header:after{content:"";position:absolute;right:-70px;top:-130px;width:320px;hei
 @media(max-width:850px){.service-info{grid-template-columns:1fr;gap:13px}.service-info-card{padding:19px;border-radius:19px}}
 @media(prefers-reduced-motion:reduce){.service-info-card{transition:none}.service-info-card:hover{transform:none}}
 
+
+/* Popup inscription obligatoire */
+.registration-modal{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;background:#000b;backdrop-filter:blur(5px)}
+.registration-modal.hidden{display:none!important}
+.registration-dialog{width:min(100%,430px);position:relative;padding:30px 25px;border:1px solid #8e6b32;border-radius:22px;background:radial-gradient(ellipse at 100% 0%,#3b2c14 0%,#1c1811 38%,#111112 78%);color:#f8f3e7;box-shadow:0 24px 80px #000a;text-align:center}
+.registration-dialog .modal-icon{font-size:34px;margin-bottom:10px}
+.registration-dialog h2{font-size:23px;color:#f4d88e;margin:0 0 12px}
+.registration-dialog p{font-size:14px;line-height:1.6;color:#d2c7b2;margin:0 0 20px}
+.registration-dialog .modal-close{position:absolute;right:13px;top:10px;border:0;background:transparent;color:#e8d3a0;font-size:27px;cursor:pointer}
+.registration-dialog .actions{justify-content:center}
+@media(max-width:480px){.registration-dialog{padding:28px 18px}}
+
 </style>
 </head>
 <body>
@@ -119,7 +131,7 @@ header:after{content:"";position:absolute;right:-70px;top:-130px;width:320px;hei
     <div class="hero-kicker"><span class="hero-dot"></span> VOTRE LIVRAISON, À VOTRE FAÇON</div>
     <h2>Le service qui<br><span>fait la différence.</span></h2>
     <p>Repas, courses, colis ou achats en magasin : décrivez votre besoin et proposez votre prix. Simple, direct et personnalisé.</p>
-    <a class="hero-cta" href="#orderForm" onclick="document.getElementById('pickup')?.focus()">Passer une demande <span>↗</span></a>
+    <a class="hero-cta" href="#orderForm" onclick="return handlePasserDemande(event)">Passer une demande <span>↗</span></a>
     <div class="hero-trust"><span>✦ Simple</span><span>✦ Personnalisé</span><span>✦ À votre rythme</span></div>
   </div>
   <div class="hero-art" aria-hidden="true">
@@ -193,6 +205,17 @@ header:after{content:"";position:absolute;right:-70px;top:-130px;width:320px;hei
 <div class="card"><h3>Paramètres du service</h3><label>Nom de l’application</label><input value="Wissam Delivery" readonly><label>Mode de fonctionnement</label><input value="Un seul livreur : Wissam" readonly><label>Vérification du profil</label><select><option>Validation manuelle par l’administrateur</option></select><label>Paiements</label><select><option>Paiement externe ou en ligne plus tard</option></select><div class="notice">À prévoir avant une vraie mise en ligne : authentification, droits d’accès, protection des données, notifications, stockage sécurisé et prestataire de paiement si nécessaire.</div></div>
 </div></section>
 </main><footer>Wissam Delivery · Les comptes sont gérés par Supabase.</footer>
+
+<div id="registrationModal" class="registration-modal hidden" role="dialog" aria-modal="true" aria-labelledby="registrationModalTitle" onclick="if(event.target===this)closeRegistrationModal()">
+  <div class="registration-dialog">
+    <button class="modal-close" type="button" aria-label="Fermer" onclick="closeRegistrationModal()">×</button>
+    <div class="modal-icon">🔐</div>
+    <h2 id="registrationModalTitle">Inscription obligatoire</h2>
+    <p>Pour passer une demande de livraison, vous devez d’abord créer un compte client. Cela vous permettra ensuite d’envoyer votre demande et de suivre vos livraisons.</p>
+    <div class="actions"><button class="btn" type="button" onclick="goToAccount('signup')">Créer mon compte</button><button class="btn secondary" type="button" onclick="goToAccount('login')">J’ai déjà un compte</button></div>
+  </div>
+</div>
+
 <script>
 let orders=[],online=false,seq=1;
 window.wissamRole='client';window.wissamHasSession=false;function switchView(v){const role=window.wissamRole||'client';const allowed=v==='client'||(window.wissamHasSession&&v==='driver'&&role==='courier')||(window.wissamHasSession&&v==='admin'&&role==='admin');if(!allowed)v='client';document.querySelectorAll('.view').forEach(e=>e.classList.toggle('hidden',e.id!==v));document.querySelectorAll('.tabs .tab').forEach(e=>e.classList.toggle('active',e.dataset.view===v));}
@@ -424,6 +447,31 @@ $("courierApplyBtn")?.addEventListener("click",async()=>{
  authMessage("Candidature envoyée. Votre accès livreur sera activé après validation.");
  await loadCourierApplication(session.user.id,window.wissamRole);
 });
+
+
+function handlePasserDemande(event){
+  event.preventDefault();
+  if(!window.wissamHasSession){
+    document.getElementById("registrationModal")?.classList.remove("hidden");
+    return false;
+  }
+  document.getElementById("orderForm")?.scrollIntoView({behavior:"smooth",block:"start"});
+  setTimeout(()=>document.getElementById("pickup")?.focus({preventScroll:true}),350);
+  return false;
+}
+function closeRegistrationModal(){
+  document.getElementById("registrationModal")?.classList.add("hidden");
+}
+function goToAccount(mode){
+  closeRegistrationModal();
+  document.getElementById("authCard")?.scrollIntoView({behavior:"smooth",block:"start"});
+  if(mode==="signup"){
+    setTimeout(()=>document.getElementById("authName")?.focus({preventScroll:true}),350);
+  }else{
+    setTimeout(()=>document.getElementById("authEmail")?.focus({preventScroll:true}),350);
+  }
+}
+document.addEventListener("keydown",event=>{if(event.key==="Escape")closeRegistrationModal()});
 
 function authMessage(message, isError=false) {
   const el=$("authMessage"); el.textContent=message;
