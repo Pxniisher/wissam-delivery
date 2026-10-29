@@ -1,4 +1,4 @@
-const CACHE = 'wissam-delivery-v2';
+const CACHE = 'wissam-delivery-v3';
 const ASSETS = ['./', './index.html', './manifest.webmanifest', './icon.svg'];
 
 self.addEventListener('install', event => {
