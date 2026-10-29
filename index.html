@@ -242,38 +242,13 @@ window.wissamSubmitOrder = async function(){
 };
 
 function orderCardFromDb(row, adminMode=false) {
-  const o=formatOrder(row);
-  const statusOptions=[["pending","À examiner"],["accepted","Acceptée"],["counteroffer","Contre-proposition"],["rejected","Refusée"],["in_progress","En cours"],["delivered","Terminée"],["cancelled","Annulée"]];
-  const paymentLabel=row.payment_status==="paid"?"Payé":row.payment_status==="pending"?"En attente de confirmation":row.payment_status==="failed"?"Échec du paiement":row.payment_status==="refunded"?"Remboursé":row.payment_method==="cash"?"Paiement en main propre":"Non réglé";
-  return '<div class="order"><div class="orderhead"><b>'+esc(o.type)+' · '+esc(o.pickup)+'</b><span class="badge '+(row.status==="pending"?"pending":"")+'">'+esc(o.status)+'</span></div><p><b>Livraison :</b> '+esc(o.dropoff)+'<br><b>Prix proposé :</b> '+money(o.offer)+'<br><b>Client :</b> '+esc(row.client_id.slice(0,8))+'…<br><b>Créée le :</b> '+esc(new Date(row.created_at).toLocaleString("fr-FR"))+(o.details?'<br><b>Détails :</b> '+esc(o.details):'')+(adminMode?'<br><b>Paiement :</b> <strong>'+paymentLabel+'</strong>':'')+'</p>'+(adminMode?'<label>Modifier le statut</label><div class="row"><select id="admin-status-'+row.id+'">'+statusOptions.map(([v,l])=>'<option value="'+v+'" '+(row.status===v?'selected':'')+'>'+l+'</option>').join('')+'</select><button class="btn" onclick="window.wissamAdminUpdateOrder(\''+row.id+'\')">Enregistrer</button></div>':'<div class="actions">'+(row.status==="pending"?'<button class="btn" onclick="window.wissamCourierAccept(\''+row.id+'\')">Accepter cette course</button>':'')+'</div>')+'</div>';
+ const o=formatOrder(row);
+ const statusOptions=[["pending","À examiner"],["accepted","Acceptée"],["counteroffer","Contre-proposition"],["rejected","Refusée"],["in_progress","En cours"],["delivered","Terminée"],["cancelled","Annulée"]];
+ const paymentLabel=row.payment_status==="paid"?"Payé":row.payment_status==="pending"?"En attente de confirmation":row.payment_status==="failed"?"Échec du paiement":row.payment_status==="refunded"?"Remboursé":row.payment_method==="cash"?"Paiement en main propre":"Non réglé";
+ const driverActions=row.status==="pending"?'<button class="btn" onclick="window.wissamCourierAccept(\''+row.id+'\')">Accepter cette course</button>':row.status==="accepted"?'<button class="btn" onclick="window.wissamGpsStart(\''+row.id+'\')">📍 Commencer la livraison</button>':row.status==="in_progress"?'<button class="btn" onclick="window.wissamGpsFinish(\''+row.id+'\')">Terminer la livraison</button>':'';
+ const map=row.status==="in_progress"&&!adminMode?'<div id="gps-map-'+row.id+'" style="height:240px;border-radius:12px;overflow:hidden;margin-top:12px"></div>':'';
+ return '<div class="order"><div class="orderhead"><b>'+esc(o.type)+' · '+esc(o.pickup)+'</b><span class="badge '+(row.status==="pending"?"pending":"")+'">'+esc(o.status)+'</span></div><p><b>Livraison :</b> '+esc(o.dropoff)+'<br><b>Prix proposé :</b> '+money(o.offer)+'<br><b>Client :</b> '+esc(row.client_id.slice(0,8))+'…<br><b>Créée le :</b> '+esc(new Date(row.created_at).toLocaleString("fr-FR"))+(o.details?'<br><b>Détails :</b> '+esc(o.details):'')+(adminMode?'<br><b>Paiement :</b> <strong>'+paymentLabel+'</strong>':'')+'</p>'+map+(adminMode?'<label>Modifier le statut</label><div class="row"><select id="admin-status-'+row.id+'">'+statusOptions.map(([v,l])=>'<option value="'+v+'" '+(row.status===v?'selected':'')+'>'+l+'</option>').join('')+'</select><button class="btn" onclick="window.wissamAdminUpdateOrder(\''+row.id+'\')">Enregistrer</button></div>':'<div class="actions">'+driverActions+'</div>')+'</div>';
 }
-
-window.wissamGpsStart = async function(id) {
- const {data:{session}} = await supabase.auth.getSession();
- if (!session || !navigator.geolocation) { authMessage("Connectez-vous et autorisez la géolocalisation.", true); return; }
- if (!confirm("Partager votre position GPS avec le client pendant cette livraison ?")) return;
- const {error} = await supabase.from("orders").update({status:"in_progress",courier_id:session.user.id}).eq("id",id).eq("status","accepted");
- if (error) { authMessage("Impossible de démarrer : "+error.message,true); return; }
- window._gpsOrderId=id;
- if (window._gpsWatchId != null) navigator.geolocation.clearWatch(window._gpsWatchId);
- window._gpsWatchId=navigator.geolocation.watchPosition(async p=>{
-  const {error:e}=await supabase.from("delivery_locations").upsert({order_id:id,courier_id:session.user.id,latitude:p.coords.latitude,longitude:p.coords.longitude,updated_at:new Date().toISOString()},{onConflict:"order_id"});
-  if(e) authMessage("Erreur GPS : "+e.message,true);
- },e=>authMessage("GPS indisponible : "+e.message,true),{enableHighAccuracy:true,maximumAge:5000,timeout:15000});
- authMessage("Suivi GPS activé pour cette livraison.");
- await loadRoleOrders();
-};
-window.wissamGpsFinish = async function(id) {
- if(window._gpsWatchId != null) navigator.geolocation.clearWatch(window._gpsWatchId);
- window._gpsWatchId=null; window._gpsOrderId=null;
- const {error}=await supabase.from("orders").update({status:"delivered"}).eq("id",id).eq("status","in_progress");
- if(error){authMessage("Impossible de terminer : "+error.message,true);return;}
- await supabase.from("delivery_locations").delete().eq("order_id",id);
- authMessage("Livraison terminée, partage GPS arrêté.");
- await loadRoleOrders();
- const {data:{session}}=await supabase.auth.getSession(); if(session) await loadMyOrders(session.user.id);
-};
-
 async function loadRoleOrders() {
   const role=window.wissamRole;
   if(role==="admin") {
