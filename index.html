@@ -467,9 +467,23 @@ $("logoutBtn").addEventListener("click",async()=>{
   await showSession(null);
   authMessage("Vous êtes déconnecté. Les espaces livreur et administration sont masqués.");
 });
-supabase.auth.onAuthStateChange((_event,session)=>showSession(session));
-const {data:{session}}=await supabase.auth.getSession();
-showSession(session);
+// Différer le traitement pour ne pas bloquer le verrou interne d’authentification Supabase.
+supabase.auth.onAuthStateChange((_event,session)=>{
+  setTimeout(()=>{
+    showSession(session).catch(e=>{
+      console.error("Erreur d’initialisation de session",e);
+      authMessage("Erreur de session : "+(e?.message||"réessayez de vous reconnecter."),true);
+    });
+  },0);
+});
+try {
+  const {data:{session},error}=await supabase.auth.getSession();
+  if(error) throw error;
+  await showSession(session);
+} catch(e) {
+  console.error("Erreur de récupération de session",e);
+  authMessage("Impossible de restaurer la session : "+(e?.message||"reconnectez-vous."),true);
+}
 </script>
 
 
