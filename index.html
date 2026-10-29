@@ -43,7 +43,7 @@ label{display:block;font-size:13px;font-weight:700;margin:13px 0 6px}input,selec
 <section id="client" class="view">
 <div class="grid">
 <div class="card"><h3>Créer une demande</h3><p class="sub">Décrivez votre course et proposez le montant que vous souhaitez payer pour la livraison.</p>
-<form id="orderForm">
+<form id="orderForm" onsubmit="event.preventDefault(); if (typeof window.wissamSubmitOrder === 'function') { window.wissamSubmitOrder(); } else { var m=document.getElementById('authMessage'); if(m){m.textContent='Le formulaire ne peut pas joindre le module de commande. Rechargez la page avec Ctrl + F5.';m.style.color='#b42318';m.style.background='#fff0f0';} } return false;">
 <label>Type de demande</label><select id="type"><option>Restaurant / repas</option><option>Courses / drive</option><option>Magasin / jeu vidéo</option><option>Colis / retrait</option><option>Autre demande</option></select>
 <label>Restaurant, magasin ou lieu de retrait</label><input id="pickup" placeholder="Ex. McDonald's Rouen, Leclerc Drive…" required>
 <label>Adresse de livraison</label><input id="dropoff" placeholder="Adresse complète" required>
