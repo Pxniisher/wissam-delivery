@@ -260,7 +260,7 @@ async function loadRoleOrders() {
     box.innerHTML=data.length?data.map(o=>orderCardFromDb(o,true)).join(""):'<p class="small">Aucune commande enregistrée.</p>';
   } else if(role==="courier") {
     const box=$("driverOrders"); box.textContent="Chargement des courses disponibles…";
-    const {data,error}=await supabase.from("orders").select("*").eq("status","pending").order("created_at",{ascending:false});
+    const {data,error}=await supabase.from("orders").select("*").in("status",["pending","accepted","in_progress"]).order("created_at",{ascending:false});
     if(error){box.textContent="Erreur de chargement : "+error.message;return;}
     $("pendingCount").textContent=data.length;
     box.innerHTML=data.length?data.map(o=>orderCardFromDb(o,false)).join(""):'<p class="small">Aucune course disponible pour le moment.</p>';
@@ -276,7 +276,7 @@ window.wissamAdminUpdateOrder=async function(id) {
   if(session) await loadMyOrders(session.user.id);
 };
 window.wissamCourierAccept=async function(id) {
-  const {error}=await supabase.from("orders").update({status:"accepted"}).eq("id",id).eq("status","pending");
+  const {data:{session}}=await supabase.auth.getSession(); if(!session){authMessage("Connectez-vous.",true);return;} const {error}=await supabase.from("orders").update({status:"accepted",courier_id:session.user.id}).eq("id",id).eq("status","pending");
   if(error){authMessage("Impossible d’accepter la course : "+error.message,true);return;}
   authMessage("Course acceptée.");
   await loadRoleOrders();
