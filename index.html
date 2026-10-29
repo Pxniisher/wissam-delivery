@@ -197,8 +197,19 @@ async function loadMyOrders(userId) {
   const {data,error}=await supabase.from("orders").select("*").eq("client_id",userId).order("created_at",{ascending:false});
   if(error){box.textContent="Impossible de charger vos demandes : "+error.message;return;}
   if(!data.length){box.innerHTML='<p class="small">Vous n’avez pas encore de demande enregistrée.</p>';return;}
-  box.innerHTML=data.map(row=>{const o=formatOrder(row);return '<div class="order"><div class="orderhead"><b>'+esc(o.type)+' · '+esc(o.pickup)+'</b><span class="badge">'+esc(o.status)+'</span></div><p><b>Livraison :</b> '+esc(o.dropoff)+'<br><b>Prix proposé :</b> '+money(o.offer)+(o.details?'<br><b>Détails :</b> '+esc(o.details):'')+'</p></div>';}).join("");
+  box.innerHTML=data.map(row=>{const o=formatOrder(row);const paymentLabel=row.payment_status==="paid"?"Payée":row.payment_status==="pending"?"Paiement en attente":row.payment_method==="cash"?"Paiement en main propre":"Non réglée";const actions=row.status==="accepted"&&row.payment_status!=="paid"&&row.payment_status!=="pending"&&row.payment_method!=="cash" ? '<div class="actions"><button class="btn" onclick="window.wissamPayOnline(\''+row.id+'\')">💳 Payer en ligne · '+money(o.offer)+'</button><button class="btn secondary" onclick="window.wissamPayCash(\''+row.id+'\')">🤝 Payer en main propre</button></div>' : (row.payment_status==="pending" ? '<p class="small">Votre paiement en ligne est en attente. Si vous avez déjà payé, la confirmation peut prendre quelques instants.</p>' : (row.payment_method==="cash"&&row.payment_status!=="paid"&&row.status==="accepted" ? '<p class="small">Vous avez choisi le paiement en main propre. Le règlement sera confirmé par le livreur.</p>' : ''));return '<div class="order"><div class="orderhead"><b>'+esc(o.type)+' · '+esc(o.pickup)+'</b><span class="badge">'+esc(o.status)+'</span></div><p><b>Livraison :</b> '+esc(o.dropoff)+'<br><b>Prix accepté :</b> '+money(o.offer)+'<br><b>Paiement :</b> '+paymentLabel+(o.details?'<br><b>Détails :</b> '+esc(o.details):'')+'</p>'+actions+'</div>';}).join("");
 }
+window.wissamPayOnline = async function(orderId){
+  const msg=$("authMessage"); if(msg){msg.textContent="Préparation du paiement sécurisé…";msg.style.color="";}
+  try { const {data,error}=await supabase.functions.invoke("stripe-checkout",{body:{order_id:orderId,method:"online"}}); if(error) throw error; if(!data?.url) throw new Error(data?.error||"Lien de paiement indisponible."); window.location.href=data.url; }
+  catch(e){if(msg){msg.textContent="Impossible de préparer le paiement : "+(e?.message||"erreur inconnue");msg.style.color="#ff8f8f";} }
+};
+window.wissamPayCash = async function(orderId){
+  if(!confirm("Confirmer que vous souhaitez régler cette commande en main propre ?")) return;
+  const msg=$("authMessage");
+  try { const {data,error}=await supabase.functions.invoke("stripe-checkout",{body:{order_id:orderId,method:"cash"}}); if(error) throw error; if(data?.error) throw new Error(data.error); if(msg){msg.textContent="Choix enregistré : vous réglerez en main propre. Le livreur confirmera le paiement.";msg.style.color="#e8c56d";} const {data:{session}}=await supabase.auth.getSession(); if(session) await loadMyOrders(session.user.id); }
+  catch(e){if(msg){msg.textContent="Impossible d'enregistrer ce choix : "+(e?.message||"erreur inconnue");msg.style.color="#ff8f8f";}}
+};
 window.wissamSubmitOrder = async function(){
   const button=document.querySelector("#orderForm button[type=submit]");
   try {
