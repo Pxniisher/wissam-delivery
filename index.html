@@ -52,7 +52,7 @@ label{display:block;font-size:13px;font-weight:700;margin:13px 0 6px}input,selec
 <div id="scheduleFields" class="row hidden"><div><label>Date souhaitée</label><input id="date" type="date"></div><div><label>Créneau</label><select id="slot"><option>09 h – 10 h</option><option>10 h – 11 h</option><option>11 h – 12 h</option><option>14 h – 15 h</option><option>15 h – 16 h</option><option>16 h – 17 h</option><option>18 h – 19 h</option><option>19 h – 20 h</option></select></div></div>
 <div class="actions"><button class="btn" type="submit">Envoyer ma demande</button><button class="btn secondary" type="reset">Effacer</button></div>
 </form>
-<div class="card" style="margin-top:18px"><h3>Mes demandes</h3><p class="sub">Retrouvez ici les commandes enregistrées sur votre compte.</p><div id="myOrders"><p class="small">Connectez-vous pour voir vos demandes.</p></div></div><div class="notice">Le prix indiqué concerne la course du livreur. Le coût des achats et leur mode de règlement doivent être convenus séparément.</div>
+<div class="card" style="margin-top:18px"><h3>Mes demandes</h3><p class="sub">Retrouvez ici les commandes enregistrées sur votre compte.</p><div id="myOrders"><p class="small">Connectez-vous pour voir vos demandes.</p></div></div><div class="notice">Le prix indiqué concerne la course du livreur. Le coût des achats et leur mode de règlement doivent être convenus séparément.</div><div class="card" id="courierApplyCard" style="margin-top:18px"><h3>🛵 Devenir livreur</h3><p class="sub">Vous pouvez demander à rejoindre Wissam Delivery comme livreur. Votre accès sera activé uniquement après validation de l’administrateur.</p><div id="courierApplyForm"><label for="courierApplyName">Nom complet</label><input id="courierApplyName" autocomplete="name" placeholder="Votre nom complet"><label for="courierApplyPhone">Téléphone</label><input id="courierApplyPhone" type="tel" autocomplete="tel" placeholder="Votre numéro de téléphone"><label for="courierApplyExperience">Expérience et zone de livraison (facultatif)</label><textarea id="courierApplyExperience" placeholder="Expérience, ville, disponibilité…"></textarea><div class="actions"><button class="btn" id="courierApplyBtn" type="button">Envoyer ma candidature</button></div></div><div id="courierApplyStatus" class="notice">Connectez-vous pour demander l’accès livreur.</div></div>
 </div>
 <div class="card"><h3>Suivi de livraison</h3><p class="sub">La carte ci-dessous est une illustration. Le suivi GPS réel sera ajouté dans une prochaine version.</p><div class="map"><div class="maplabel" style="top:18px;left:16px">📍 Retrait</div><div class="maplabel" style="right:15px;bottom:18px">🏠 Livraison</div><div class="pin"><span>W</span></div></div><div class="notice">📡 Le partage de position devra être activé uniquement pendant une course, avec l’autorisation du livreur.</div></div>
 </div>
@@ -62,7 +62,7 @@ label{display:block;font-size:13px;font-weight:700;margin:13px 0 6px}input,selec
 <div class="card"><h3>Mes réservations</h3><p class="sub">Les demandes planifiées s’affichent ici avec leur date et leur créneau.</p><div id="scheduleList"><p class="small">Aucune réservation pour le moment.</p></div><h3 style="margin-top:25px">Mon profil</h3><label>Nom affiché</label><input value="Wissam" id="driverName"><label>Présentation</label><textarea id="driverBio">Livraison de repas, courses et retraits en magasin sur réservation.</textarea><label>Zone de livraison</label><input id="zone" placeholder="Ex. Rouen et alentours"><p class="small">Dans cette maquette, le profil et les commandes restent dans ce navigateur. Ils ne sont pas synchronisés entre plusieurs téléphones.</p></div>
 </div></section>
 <section id="admin" class="view hidden"><div class="grid">
-<div class="card"><h3>Administration</h3><p class="sub">Espace réservé à l’administrateur dans la version finale. Cette maquette ne comporte pas encore de vraie connexion sécurisée.</p><div class="statrow"><div class="stat"><b id="adminTotal">0</b><span>Total demandes</span></div><div class="stat"><b id="adminDone">0</b><span>Terminées</span></div><div class="stat"><b>1</b><span>Livreur prévu</span></div></div><h3>Gestion des demandes</h3><div id="adminOrders"><p class="small">Aucune demande enregistrée.</p></div></div>
+<div class="card"><h3>Administration</h3><p class="sub">Espace réservé à l’administrateur dans la version finale. Cette maquette ne comporte pas encore de vraie connexion sécurisée.</p><div class="statrow"><div class="stat"><b id="adminTotal">0</b><span>Total demandes</span></div><div class="stat"><b id="adminDone">0</b><span>Terminées</span></div><div class="stat"><b>1</b><span>Livreur prévu</span></div></div><h3>Gestion des demandes</h3><div id="adminOrders"><p class="small">Aucune demande enregistrée.</p></div><h3 style="margin-top:25px">Candidatures livreurs</h3><p class="sub">Les nouveaux candidats restent clients jusqu’à votre validation.</p><div id="courierApplications"><p class="small">Chargement des candidatures…</p></div></div>
 <div class="card"><h3>Paramètres du service</h3><label>Nom de l’application</label><input value="Wissam Delivery" readonly><label>Mode de fonctionnement</label><input value="Un seul livreur : Wissam" readonly><label>Vérification du profil</label><select><option>Validation manuelle par l’administrateur</option></select><label>Paiements</label><select><option>Paiement externe ou en ligne plus tard</option></select><div class="notice">À prévoir avant une vraie mise en ligne : authentification, droits d’accès, protection des données, notifications, stockage sécurisé et prestataire de paiement si nécessaire.</div></div>
 </div></section>
 </main><footer>Wissam Delivery · Les comptes sont gérés par Supabase. Les commandes restent en mode démonstration jusqu’à la prochaine étape.</footer>
@@ -172,6 +172,49 @@ window.wissamCourierAccept=async function(id) {
   await loadRoleOrders();
 };
 
+
+async function loadCourierApplication(userId, role) {
+  const form=$("courierApplyForm"), status=$("courierApplyStatus"), card=$("courierApplyCard");
+  if(!userId){form?.classList.add("hidden");status.textContent="Connectez-vous pour demander l’accès livreur.";return;}
+  if(role==="courier"){form?.classList.add("hidden");status.textContent="Votre candidature est validée : votre espace livreur est activé.";return;}
+  const {data,error}=await supabase.from("courier_applications").select("status,created_at").eq("user_id",userId).maybeSingle();
+  if(error){status.textContent="Impossible de vérifier votre candidature pour le moment.";return;}
+  if(data){form?.classList.add("hidden");status.textContent=data.status==="pending"?"Votre candidature est en attente de validation par l’administrateur.":data.status==="approved"?"Candidature validée. Déconnectez-vous puis reconnectez-vous pour actualiser votre accès.":"Votre candidature a été refusée. Vous pouvez contacter l’administrateur.";return;}
+  form?.classList.remove("hidden");
+  $("courierApplyName").value=$("authName").value.trim()||"";
+}
+async function loadCourierApplications(){
+ const box=$("courierApplications"); if(!box||window.wissamRole!=="admin")return;
+ const {data,error}=await supabase.from("courier_applications").select("*").order("created_at",{ascending:false});
+ if(error){box.textContent="Erreur de chargement des candidatures : "+error.message;return;}
+ if(!data?.length){box.innerHTML='<p class="small">Aucune candidature pour le moment.</p>';return;}
+ box.innerHTML=data.map(a=>'<div class="order"><div class="orderhead"><b>'+esc(a.full_name)+'</b><span class="badge '+(a.status==="pending"?"pending":"")+'">'+esc(({pending:"En attente",approved:"Validée",rejected:"Refusée"})[a.status]||a.status)+'</span></div><p><b>Téléphone :</b> '+esc(a.phone||"Non renseigné")+'<br><b>Expérience :</b> '+esc(a.experience||"Non renseignée")+'<br><b>Compte :</b> '+esc(a.user_id)+'<br><b>Date :</b> '+esc(new Date(a.created_at).toLocaleString("fr-FR"))+'</p>'+(a.status==="pending"?'<div class="actions"><button class="btn" onclick="window.wissamReviewCourier(\''+a.id+'\',\''+a.user_id+'\',\'approved\')">Valider le livreur</button><button class="btn danger" onclick="window.wissamReviewCourier(\''+a.id+'\',\''+a.user_id+'\',\'rejected\')">Refuser</button></div>':'')+'</div>').join("");
+}
+window.wissamReviewCourier=async function(applicationId,userId,status){
+ const label=status==="approved"?"valider":"refuser";
+ if(!confirm("Confirmer : "+label+" cette candidature ?"))return;
+ if(status==="approved"){
+   const {error:profileError}=await supabase.from("profiles").update({role:"courier"}).eq("id",userId);
+   if(profileError){authMessage("Impossible d’activer l’accès livreur : "+profileError.message,true);return;}
+ }
+ const {error}=await supabase.from("courier_applications").update({status,reviewed_at:new Date().toISOString()}).eq("id",applicationId);
+ if(error){authMessage("Le rôle a peut-être été mis à jour, mais la candidature n’a pas pu être enregistrée : "+error.message,true);return;}
+ authMessage(status==="approved"?"Livreur validé. Il devra se reconnecter pour accéder à son espace.":"Candidature refusée.");
+ await loadCourierApplications();
+};
+$("courierApplyBtn")?.addEventListener("click",async()=>{
+ const {data:{session}}=await supabase.auth.getSession();
+ if(!session){authMessage("Connectez-vous avant d’envoyer votre candidature.",true);return;}
+ const full_name=$("courierApplyName").value.trim(),phone=$("courierApplyPhone").value.trim(),experience=$("courierApplyExperience").value.trim();
+ if(!full_name){authMessage("Indiquez votre nom complet.",true);return;}
+ const button=$("courierApplyBtn");button.disabled=true;
+ const {error}=await supabase.from("courier_applications").insert({user_id:session.user.id,full_name,phone:phone||null,experience:experience||null});
+ button.disabled=false;
+ if(error){authMessage(error.code==="23505"?"Une candidature existe déjà pour ce compte.": "Impossible d’envoyer la candidature : "+error.message,true);return;}
+ authMessage("Candidature envoyée. Votre accès livreur sera activé après validation.");
+ await loadCourierApplication(session.user.id,window.wissamRole);
+});
+
 function authMessage(message, isError=false) {
   const el=$("authMessage"); el.textContent=message;
   el.style.background=isError?"#fff0f0":"#f0f7ff";
@@ -216,6 +259,8 @@ async function showSession(session) {
   applyAccess(session);
   await loadMyOrders(session?.user?.id || null);
   if (session) await loadRoleOrders();
+  await loadCourierApplication(session?.user?.id || null,currentRole);
+  if (session && currentRole === "admin") await loadCourierApplications();
 }
 $("signupBtn").addEventListener("click",async()=>{
   const name=$("authName").value.trim(), email=$("authEmail").value.trim(), password=$("authPassword").value;
