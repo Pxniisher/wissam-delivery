@@ -279,9 +279,9 @@ window.wissamGpsResume=async function(id){
  window._gpsOrderId=id;
  window._gpsWatchId=navigator.geolocation.watchPosition(async p=>{
   const {error:e}=await supabase.from("delivery_locations").upsert({order_id:id,courier_id:session.user.id,latitude:p.coords.latitude,longitude:p.coords.longitude,updated_at:new Date().toISOString()},{onConflict:"order_id"});
-  if(e)authMessage("Erreur GPS : "+e.message,true);
- },e=>authMessage("GPS indisponible : "+e.message,true),{enableHighAccuracy:true,maximumAge:5000,timeout:15000});
- authMessage("Suivi GPS activé. Gardez cette page ouverte pendant la livraison.");
+  if(e){authMessage("Erreur GPS : "+e.message,true);alert("La position GPS n’a pas pu être enregistrée : "+e.message);}else{authMessage("Position GPS envoyée au client.");}
+ },e=>{authMessage("GPS indisponible : "+e.message,true);alert("GPS indisponible : "+e.message);},{enableHighAccuracy:true,maximumAge:5000,timeout:15000});
+ authMessage("Demande GPS lancée. Autorisez la localisation et gardez cette page ouverte.");
 };
 window.wissamGpsFinish=async function(id){
  if(window._gpsWatchId!=null)navigator.geolocation.clearWatch(window._gpsWatchId);
