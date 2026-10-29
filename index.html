@@ -46,12 +46,60 @@ hr{border:0;border-top:1px solid #393329}
 @media(max-width:760px){header{padding:20px}main{margin:18px auto}.intro h2{font-size:24px}.tabs .tab{flex:1;padding:11px 9px;font-size:13px}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{transition:none!important}}
 
+
+/* Premium brand polish */
+header{position:relative;overflow:hidden;padding-top:20px;padding-bottom:20px}
+header:after{content:"";position:absolute;right:-70px;top:-130px;width:320px;height:320px;border:1px solid #c49a4a35;border-radius:50%;box-shadow:0 0 0 28px #c49a4a08,0 0 0 58px #c49a4a06;pointer-events:none}
+.brand{position:relative;z-index:1}
+.logo{width:54px;height:54px;border-radius:17px;font-family:Georgia,serif;font-size:30px;font-style:italic;box-shadow:0 5px 22px #d6ad5530,inset 0 1px #fff8}
+.brand h1{font-family:Georgia,'Times New Roman',serif;font-size:24px;letter-spacing:.15px}
+.premium-hero{position:relative;isolation:isolate;display:grid;grid-template-columns:minmax(0,1.1fr) minmax(280px,.9fr);align-items:center;gap:25px;min-height:345px;margin:22px 0 25px;padding:36px 42px;overflow:hidden;border:1px solid #6f542b;border-radius:24px;background:radial-gradient(ellipse at 82% 45%,#3b2c14 0%,#1c1811 34%,#111112 70%);box-shadow:0 22px 50px #0005}
+.premium-hero:before{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(115deg,#ffffff03,transparent 48%,#d4a94b0a)}
+.hero-copy{position:relative;z-index:2}
+.hero-kicker{display:flex;align-items:center;gap:9px;font-size:10px;font-weight:900;letter-spacing:2px;color:#d9b76c;margin-bottom:18px}
+.hero-dot{width:7px;height:7px;border-radius:50%;background:#e0bd68;box-shadow:0 0 13px #e0bd68}
+.hero-copy h2{font-family:Georgia,'Times New Roman',serif;font-weight:500;line-height:1.02;letter-spacing:-1.3px;font-size:clamp(34px,4.2vw,52px);margin:0 0 17px;color:#fff7e5}
+.hero-copy h2 span{color:#e0bd68;font-style:italic}
+.hero-copy p{max-width:470px;color:#c4b9a3;line-height:1.75;font-size:14px;margin:0 0 22px}
+.hero-cta{display:inline-flex;align-items:center;gap:22px;padding:13px 18px;border-radius:10px;background:linear-gradient(135deg,#f3d993,#bd8c37);color:#17120a;text-decoration:none;font-size:13px;font-weight:900;box-shadow:0 8px 22px #bd8c3730;transition:transform .18s,filter .18s}
+.hero-cta:hover{transform:translateY(-2px);filter:brightness(1.06)}
+.hero-cta span{font-size:18px}
+.hero-trust{display:flex;flex-wrap:wrap;gap:15px;margin-top:23px;color:#a99c84;font-size:11px}
+.hero-art{position:relative;min-height:265px;display:grid;place-items:center}
+.hero-orbit{position:absolute;border:1px solid #d6ad5530;border-radius:50%;aspect-ratio:1}
+.orbit-one{width:min(100%,280px);transform:rotate(-24deg);border-style:dashed}
+.orbit-two{width:min(80%,225px);border-color:#d6ad554d;box-shadow:0 0 40px #d6ad550c,inset 0 0 40px #d6ad5508}
+.hero-medallion{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;width:176px;height:176px;border-radius:50%;border:1px solid #d5ad5b;background:radial-gradient(circle at 35% 25%,#423219,#18130a 68%);box-shadow:0 0 0 8px #d6ad5509,0 0 45px #d6ad551b,inset 0 0 22px #d6ad5510}
+.hero-medallion:before{content:"";position:absolute;inset:7px;border:1px solid #d6ad5555;border-radius:50%}
+.medallion-w{font-family:Georgia,'Times New Roman',serif;font-size:78px;font-style:italic;line-height:.95;color:#e8c776;text-shadow:0 4px 18px #d6ad5530}
+.medallion-line{width:48px;height:1px;background:#b99145;margin:7px 0 6px}
+.medallion-caption{text-align:center;color:#e9d7ac;font-size:8px;letter-spacing:3px;line-height:1.6;font-weight:800}
+.hero-float{position:absolute;display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid #6b542d;border-radius:12px;background:#171510eF;box-shadow:0 10px 24px #0005;color:#e4c779;font-size:12px}
+.hero-float span{color:#e6dcc7}.float-top{top:19px;right:0}.float-bottom{bottom:15px;left:0}.float-bottom span{font-size:10px;line-height:1.6}.float-bottom .float-icon{display:grid;place-items:center;width:30px;height:30px;border-radius:9px;background:#3a2d16;color:#edcd79;font-size:18px}
+@media(max-width:760px){.premium-hero{grid-template-columns:1fr;gap:6px;padding:28px 22px 22px;min-height:unset}.hero-copy h2{font-size:39px}.hero-art{min-height:235px;margin-top:4px}.hero-medallion{width:155px;height:155px}.medallion-w{font-size:68px}.float-top{right:2px;top:8px}.float-bottom{left:0;bottom:6px}.hero-trust{gap:10px}.brand h1{font-size:21px}}
+
 </style>
 </head>
 <body>
 <header><div class="brand"><div class="logo">W</div><div><h1>Wissam Delivery</h1><p>Vos courses, votre prix, votre livreur.</p></div></div><div class="pill">Comptes clients · Version en cours</div></header>
 <main>
-<div class="intro"><div><h2>Bonjour 👋 Bienvenue sur Wissam Delivery</h2><p>Commandez un repas, des courses ou un article en magasin. Proposez votre prix : Wissam peut l’accepter, le négocier ou refuser.</p></div><div class="demo">⚠️ Étape 1 : comptes en ligne. Les commandes seront connectées ensuite.</div></div>
+<div class="intro"><div><h2>Bonjour 👋 Bienvenue sur Wissam Delivery</h2><p>Commandez un repas, des courses ou un article en magasin. Proposez votre prix : Wissam peut l’accepter, le négocier ou refuser.</p></div><div class="demo">✦ Service de livraison personnalisé</div></div>
+
+<section class="premium-hero" aria-label="Bienvenue chez Wissam Delivery">
+  <div class="hero-copy">
+    <div class="hero-kicker"><span class="hero-dot"></span> VOTRE LIVRAISON, À VOTRE FAÇON</div>
+    <h2>Le service qui<br><span>fait la différence.</span></h2>
+    <p>Repas, courses, colis ou achats en magasin : décrivez votre besoin et proposez votre prix. Simple, direct et personnalisé.</p>
+    <a class="hero-cta" href="#orderForm" onclick="document.getElementById('pickup')?.focus()">Passer une demande <span>↗</span></a>
+    <div class="hero-trust"><span>✦ Simple</span><span>✦ Personnalisé</span><span>✦ À votre rythme</span></div>
+  </div>
+  <div class="hero-art" aria-hidden="true">
+    <div class="hero-orbit orbit-one"></div><div class="hero-orbit orbit-two"></div>
+    <div class="hero-medallion"><span class="medallion-w">W</span><span class="medallion-line"></span><span class="medallion-caption">WISSAM<br>DELIVERY</span></div>
+    <div class="hero-float float-top">✦ <span>À votre service</span></div>
+    <div class="hero-float float-bottom"><span class="float-icon">↗</span><span>Une demande<br><b>en quelques clics</b></span></div>
+  </div>
+</section>
 
 <div class="card" id="authCard" style="margin-bottom:20px">
   <h3>🔐 Mon compte Wissam Delivery</h3>
