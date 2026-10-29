@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#12243a"><meta name="description" content="Wissam Delivery : vos courses, votre prix, votre livreur."><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon.svg" type="image/svg+xml">
-<title>Wissam Delivery — Prototype</title>
+<title>Wissam Delivery</title>
 <style>
 :root{--navy:#12243a;--blue:#2864e8;--cyan:#dff4f2;--bg:#f4f7fb;--muted:#66758a;--line:#e5ebf3;--white:#fff;--green:#168568;--orange:#ffb84d}
 *{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--navy)}
@@ -17,9 +17,28 @@ label{display:block;font-size:13px;font-weight:700;margin:13px 0 6px}input,selec
 </style>
 </head>
 <body>
-<header><div class="brand"><div class="logo">W</div><div><h1>Wissam Delivery</h1><p>Vos courses, votre prix, votre livreur.</p></div></div><div class="pill">Prototype interactif · Version de démonstration</div></header>
+<header><div class="brand"><div class="logo">W</div><div><h1>Wissam Delivery</h1><p>Vos courses, votre prix, votre livreur.</p></div></div><div class="pill">Comptes clients · Version en cours</div></header>
 <main>
-<div class="intro"><div><h2>Bonjour 👋 Bienvenue sur Wissam Delivery</h2><p>Commandez un repas, des courses ou un article en magasin. Proposez votre prix : Wissam peut l’accepter, le négocier ou refuser.</p></div><div class="demo">⚠️ Démo locale : aucune commande réelle n’est envoyée.</div></div>
+<div class="intro"><div><h2>Bonjour 👋 Bienvenue sur Wissam Delivery</h2><p>Commandez un repas, des courses ou un article en magasin. Proposez votre prix : Wissam peut l’accepter, le négocier ou refuser.</p></div><div class="demo">⚠️ Étape 1 : comptes en ligne. Les commandes seront connectées ensuite.</div></div>
+
+<div class="card" id="authCard" style="margin-bottom:20px">
+  <h3>🔐 Mon compte Wissam Delivery</h3>
+  <p class="sub">Créez votre compte client avec votre adresse e-mail, ou connectez-vous si vous en avez déjà un.</p>
+  <div id="authLoggedOut">
+    <div class="row">
+      <div><label for="authName">Nom complet (pour créer un compte)</label><input id="authName" autocomplete="name" placeholder="Votre nom"></div>
+      <div><label for="authEmail">Adresse e-mail</label><input id="authEmail" type="email" autocomplete="email" placeholder="vous@exemple.fr" required></div>
+    </div>
+    <label for="authPassword">Mot de passe (8 caractères minimum)</label><input id="authPassword" type="password" minlength="8" autocomplete="current-password" placeholder="Au moins 8 caractères" required>
+    <div class="actions"><button class="btn" id="signupBtn" type="button">Créer mon compte</button><button class="btn secondary" id="loginBtn" type="button">Me connecter</button></div>
+  </div>
+  <div id="authLoggedIn" class="hidden">
+    <p id="authWelcome"><b>Vous êtes connecté.</b></p>
+    <div class="actions"><button class="btn secondary" id="logoutBtn" type="button">Me déconnecter</button></div>
+  </div>
+  <div id="authMessage" class="notice" role="status">Connexion sécurisée par Supabase. L’inscription crée un compte client.</div>
+</div>
+
 <div class="tabs"><button class="tab active" data-view="client">🛍️ Espace client</button><button class="tab" data-view="driver">🛵 Espace livreur</button><button class="tab" data-view="admin">🛡️ Administration</button></div>
 <section id="client" class="view">
 <div class="grid">
@@ -45,7 +64,7 @@ label{display:block;font-size:13px;font-weight:700;margin:13px 0 6px}input,selec
 <div class="card"><h3>Administration</h3><p class="sub">Espace réservé à l’administrateur dans la version finale. Cette maquette ne comporte pas encore de vraie connexion sécurisée.</p><div class="statrow"><div class="stat"><b id="adminTotal">0</b><span>Total demandes</span></div><div class="stat"><b id="adminDone">0</b><span>Terminées</span></div><div class="stat"><b>1</b><span>Livreur prévu</span></div></div><h3>Gestion des demandes</h3><div id="adminOrders"><p class="small">Aucune demande enregistrée.</p></div></div>
 <div class="card"><h3>Paramètres du service</h3><label>Nom de l’application</label><input value="Wissam Delivery" readonly><label>Mode de fonctionnement</label><input value="Un seul livreur : Wissam" readonly><label>Vérification du profil</label><select><option>Validation manuelle par l’administrateur</option></select><label>Paiements</label><select><option>Paiement externe ou en ligne plus tard</option></select><div class="notice">À prévoir avant une vraie mise en ligne : authentification, droits d’accès, protection des données, notifications, stockage sécurisé et prestataire de paiement si nécessaire.</div></div>
 </div></section>
-</main><footer>Wissam Delivery · Prototype de conception · Les données saisies restent dans cette page et ne sont pas envoyées à un serveur.</footer>
+</main><footer>Wissam Delivery · Les comptes sont gérés par Supabase. Les commandes restent en mode démonstration jusqu’à la prochaine étape.</footer>
 <script>
 let orders=[],online=false,seq=1;
 function switchView(v){document.querySelectorAll('.view').forEach(e=>e.classList.toggle('hidden',e.id!==v));document.querySelectorAll('.tab').forEach(e=>e.classList.toggle('active',e.dataset.view===v));}
@@ -62,4 +81,55 @@ function showNotice(t){alert(t)}
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 render();
 </script>
+
+<script type="module">
+import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+const supabase = createClient("https://mobwsldiewxwzzukrrbr.supabase.co", "sb_publishable_VrewERrzwE79fzyD1Lghig_mhUP1hkT");
+const $ = (id) => document.getElementById(id);
+function authMessage(message, isError=false) {
+  const el=$("authMessage"); el.textContent=message;
+  el.style.background=isError?"#fff0f0":"#f0f7ff";
+  el.style.color=isError?"#b42318":"#305477";
+}
+function showSession(session) {
+  $("authLoggedOut").classList.toggle("hidden",!!session);
+  $("authLoggedIn").classList.toggle("hidden",!session);
+  if(session) {
+    const email=session.user.email || "";
+    $("authWelcome").textContent="Connecté : "+email;
+    authMessage("Compte connecté. La connexion est active sur cet appareil. La sauvegarde des commandes sera reliée à ce compte à l’étape suivante.");
+  } else {
+    $("authWelcome").textContent="";
+  }
+}
+$("signupBtn").addEventListener("click",async()=>{
+  const name=$("authName").value.trim(), email=$("authEmail").value.trim(), password=$("authPassword").value;
+  if(!name){authMessage("Indiquez votre nom complet pour créer le compte.",true);return;}
+  if(!email || password.length<8){authMessage("Indiquez un e-mail valide et un mot de passe d’au moins 8 caractères.",true);return;}
+  $("signupBtn").disabled=true;
+  const {data,error}=await supabase.auth.signUp({email,password,options:{data:{full_name:name}}});
+  $("signupBtn").disabled=false;
+  if(error){authMessage(error.message,true);return;}
+  if(data.session){showSession(data.session);authMessage("Compte créé et connecté. Vous pourrez vous connecter avec cet e-mail et ce mot de passe.");}
+  else {authMessage("Demande de création envoyée. Consultez votre boîte e-mail et cliquez sur le lien de confirmation avant de vous connecter.");}
+});
+$("loginBtn").addEventListener("click",async()=>{
+  const email=$("authEmail").value.trim(),password=$("authPassword").value;
+  if(!email||!password){authMessage("Saisissez votre e-mail et votre mot de passe.",true);return;}
+  $("loginBtn").disabled=true;
+  const {data,error}=await supabase.auth.signInWithPassword({email,password});
+  $("loginBtn").disabled=false;
+  if(error){authMessage("Connexion impossible : "+error.message,true);return;}
+  showSession(data.session);
+});
+$("logoutBtn").addEventListener("click",async()=>{
+  const {error}=await supabase.auth.signOut();
+  if(error){authMessage(error.message,true);return;}
+  showSession(null);authMessage("Vous êtes déconnecté.");
+});
+supabase.auth.onAuthStateChange((_event,session)=>showSession(session));
+const {data:{session}}=await supabase.auth.getSession();
+showSession(session);
+</script>
+
 <script>if ("serviceWorker" in navigator && location.protocol.startsWith("http")) { window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js").catch(()=>{})); }</script></body></html>
