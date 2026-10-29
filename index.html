@@ -433,41 +433,5 @@ showSession(session);
 </script>
 
 
-<script>
-(function(){
- const maps={}; let watchId=null, activeId=null;
- async function showLiveOrders(){
-  const root=document.getElementById("clientLiveTracking"); if(!root||!window.wissamHasSession)return;
-  const {data:{session}}=await window.supabase?.auth?.getSession?.() || {data:{session:null}};
- }
- window.wissamGpsStart=async function(orderId){
-  const {data:{session}}=await supabase.auth.getSession();
-  if(!session||!navigator.geolocation){alert("Connectez-vous et autorisez la géolocalisation.");return;}
-  if(!confirm("Partager votre position GPS avec le client pendant cette livraison ?"))return;
-  const {error}=await supabase.from("orders").update({status:"in_progress",courier_id:session.user.id}).eq("id",orderId).eq("status","accepted");
-  if(error){alert("Impossible de démarrer : "+error.message);return;}
-  if(watchId!==null)navigator.geolocation.clearWatch(watchId);
-  activeId=orderId;
-  watchId=navigator.geolocation.watchPosition(async p=>{
-   const {error:e}=await supabase.from("delivery_locations").upsert({order_id:activeId,courier_id:session.user.id,latitude:p.coords.latitude,longitude:p.coords.longitude,updated_at:new Date().toISOString()},{onConflict:"order_id"});
-   if(e)console.error("GPS:",e.message);
-  },e=>alert("GPS indisponible : "+e.message),{enableHighAccuracy:true,maximumAge:5000,timeout:15000});
-  await loadRoleOrders();
- };
- window.wissamGpsFinish=async function(orderId){
-  if(watchId!==null)navigator.geolocation.clearWatch(watchId);watchId=null;activeId=null;
-  const {error}=await supabase.from("orders").update({status:"delivered"}).eq("id",orderId).eq("status","in_progress");
-  if(error){alert("Impossible de terminer : "+error.message);return;}
-  await supabase.from("delivery_locations").delete().eq("order_id",orderId);
-  await loadRoleOrders();
- };
- window.wissamGpsClientMap=async function(orderId,el){
-  if(!window.L||!el)return;
-  const map=L.map(el).setView([46.6,2.4],5);L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:"© OpenStreetMap"}).addTo(map);
-  const paint=d=>{if(!d)return;const p=[d.latitude,d.longitude];if(!map.marker)map.marker=L.marker(p).addTo(map).bindPopup("Livreur en route");else map.marker.setLatLng(p);map.setView(p,15);};
-  const {data}=await supabase.from("delivery_locations").select("latitude,longitude").eq("order_id",orderId).maybeSingle();paint(data);
-  supabase.channel("gps-"+orderId).on("postgres_changes",{event:"*",schema:"public",table:"delivery_locations",filter:"order_id=eq."+orderId},e=>paint(e.new)).subscribe();
- };
-})();
-</script>
+
 <script>if ("serviceWorker" in navigator && location.protocol.startsWith("http")) { window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js").catch(()=>{})); }</script></body></html>
