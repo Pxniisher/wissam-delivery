@@ -94,6 +94,16 @@ header:after{content:"";position:absolute;right:-70px;top:-130px;width:320px;hei
 #myOrders::-webkit-scrollbar-thumb{background:linear-gradient(180deg,#f0d78f,#b88932);border-radius:10px;border:2px solid #211e18}
 #myOrders::-webkit-scrollbar-thumb:hover{background:#f0d78f}
 
+
+.service-info{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin:24px 0 28px}
+.service-info-card{display:flex;gap:14px;align-items:flex-start;background:#fff;border:1px solid var(--line);border-radius:18px;padding:20px;box-shadow:0 8px 24px #12243a0a}
+.service-info-icon{flex:0 0 42px;width:42px;height:42px;border-radius:13px;background:var(--cyan);display:grid;place-items:center;font-size:21px}
+.service-info-card h3{margin:2px 0 9px;font-size:16px}
+.service-info-card p{margin:0;color:var(--muted);font-size:14px;line-height:1.65}
+.service-info-card strong{color:var(--navy)}
+.service-payment{border-color:#b9e6d7;background:#fbfffd}
+@media(max-width:850px){.service-info{grid-template-columns:1fr}.service-info-card{padding:17px}}
+
 </style>
 </head>
 <body>
@@ -114,6 +124,24 @@ header:after{content:"";position:absolute;right:-70px;top:-130px;width:320px;hei
     <div class="hero-medallion"><span class="medallion-w">W</span><span class="medallion-line"></span><span class="medallion-caption">WISSAM<br>DELIVERY</span></div>
     <div class="hero-float float-top">✦ <span>À votre service</span></div>
     <div class="hero-float float-bottom"><span class="float-icon">↗</span><span>Une demande<br><b>en quelques clics</b></span></div>
+  </div>
+</section>
+
+<section class="service-info" aria-label="Informations sur le service de livraison">
+  <div class="service-info-card">
+    <div class="service-info-icon">⏱️</div>
+    <div><h3>Quel délai pour votre livraison ?</h3>
+    <p>Une fois votre commande acceptée, prévoyez un délai de <strong>30 à 60 minutes</strong> pour la livraison. Ce délai peut varier selon la distance, le trafic et la disponibilité.</p></div>
+  </div>
+  <div class="service-info-card">
+    <div class="service-info-icon">🛍️</div>
+    <div><h3>Wissam Delivery livre presque tout !</h3>
+    <p>Un livre, un jeu vidéo, des courses, un repas, un gadget ou un autre article : indiquez-moi ce dont vous avez besoin et je vous dirai si la livraison est possible.</p></div>
+  </div>
+  <div class="service-info-card service-payment">
+    <div class="service-info-icon">💳</div>
+    <div><h3>Vous payez uniquement la livraison à Wissam</h3>
+    <p><strong>Je facture uniquement le montant de la livraison, pas l’article acheté.</strong> Le prix de l’article reste à votre charge et doit être réglé séparément, soit en main propre, soit à l’avance par paiement en ligne ou par virement Wero. Les modalités seront convenues avant l’achat.</p></div>
   </div>
 </section>
 
