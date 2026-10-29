@@ -198,7 +198,16 @@ async function loadMyOrders(userId) {
   if(error){box.textContent="Impossible de charger vos demandes : "+error.message;return;}
   if(!data.length){box.innerHTML='<p class="small">Vous n’avez pas encore de demande enregistrée.</p>';return;}
   box.innerHTML=data.map(row=>{const o=formatOrder(row);const paymentLabel=row.payment_status==="paid"?"Payée":row.payment_status==="pending"?"Paiement en attente":row.payment_method==="cash"?"Paiement en main propre":"Non réglée";const actions=row.status==="accepted"&&row.payment_status!=="paid"&&row.payment_status!=="pending"&&row.payment_method!=="cash" ? '<div class="actions"><button class="btn" onclick="window.wissamPayOnline(\''+row.id+'\')">💳 Payer en ligne · '+money(o.offer)+'</button><button class="btn secondary" onclick="window.wissamPayCash(\''+row.id+'\')">🤝 Payer en main propre</button></div>' : (row.payment_status==="pending" ? '<p class="small">Votre paiement en ligne est en attente. Si vous avez déjà payé, la confirmation peut prendre quelques instants.</p>' : (row.payment_method==="cash"&&row.payment_status!=="paid"&&row.status==="accepted" ? '<p class="small">Vous avez choisi le paiement en main propre. Le règlement sera confirmé par le livreur.</p>' : ''));return '<div class="order"><div class="orderhead"><b>'+esc(o.type)+' · '+esc(o.pickup)+'</b><span class="badge">'+esc(o.status)+'</span></div><p><b>Livraison :</b> '+esc(o.dropoff)+'<br><b>Prix accepté :</b> '+money(o.offer)+'<br><b>Paiement :</b> '+paymentLabel+(o.details?'<br><b>Détails :</b> '+esc(o.details):'')+'</p>'+actions+(row.status==='in_progress'?'<div id="gps-map-'+row.id+'" style="height:240px;border-radius:12px;overflow:hidden;margin-top:12px"></div><p class="small">📡 Position du livreur en direct.</p>':'')+'</div>';}).join("");
-  data.filter(row=>row.status==='in_progress').forEach(row=>{const el=$("gps-map-"+row.id);if(el)window.wissamInitGpsMap(row.id,el);});
+  const activeGps=data.filter(row=>row.status==="in_progress");
+ const liveBox=$("clientLiveTracking");
+ if(liveBox){
+  if(!activeGps.length){liveBox.innerHTML='<p class="small">Aucune livraison en cours avec suivi GPS.</p>';}
+  else{
+   liveBox.innerHTML=activeGps.map(row=>{const o=formatOrder(row);return '<div class="order"><b>'+esc(o.type)+' · '+esc(o.pickup)+'</b><p><b>Destination :</b> '+esc(o.dropoff)+'</p><div id="gps-live-map-'+row.id+'" style="height:280px;border-radius:12px;overflow:hidden;margin-top:12px"></div><p class="small">📡 Position du livreur mise à jour en direct.</p></div>';}).join("");
+   activeGps.forEach(row=>{const el=$("gps-live-map-"+row.id);if(el)window.wissamInitGpsMap(row.id,el);});
+  }
+ }
+ data.filter(row=>row.status==="in_progress").forEach(row=>{const el=$("gps-map-"+row.id);if(el)window.wissamInitGpsMap(row.id,el);});
 }
 window.wissamPayOnline = async function(orderId){
   const msg=$("authMessage"); if(msg){msg.textContent="Préparation du paiement sécurisé…";msg.style.color="";}
