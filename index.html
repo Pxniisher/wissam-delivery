@@ -202,7 +202,7 @@ async function loadMyOrders(userId) {
 window.wissamPayOnline = async function(orderId){
   const msg=$("authMessage"); if(msg){msg.textContent="Préparation du paiement sécurisé…";msg.style.color="";}
   try { const {data,error}=await supabase.functions.invoke("stripe-checkout",{body:{order_id:orderId,method:"online"}}); if(error) throw error; if(!data?.url) throw new Error(data?.error||"Lien de paiement indisponible."); window.location.href=data.url; }
-  catch(e){if(msg){msg.textContent="Impossible de préparer le paiement : "+(e?.message||"erreur inconnue");msg.style.color="#ff8f8f";} }
+  catch(e){const detail="Impossible de préparer le paiement : "+(e?.message||"erreur inconnue");if(msg){msg.textContent=detail;msg.style.color="#ff8f8f";}alert(detail);}
 };
 window.wissamPayCash = async function(orderId){
   if(!confirm("Confirmer que vous souhaitez régler cette commande en main propre ?")) return;
