@@ -39,7 +39,7 @@ label{display:block;font-size:13px;font-weight:700;margin:13px 0 6px}input,selec
   <div id="authMessage" class="notice" role="status">Connexion sécurisée par Supabase. L’inscription crée un compte client.</div>
 </div>
 
-<div class="tabs"><button class="tab active" data-view="client">🛍️ Espace client</button><button class="tab" data-view="driver">🛵 Espace livreur</button><button class="tab" data-view="admin">🛡️ Administration</button></div>
+<div class="tabs"><button class="tab active" data-view="client">🛍️ Espace client</button><button class="tab hidden" data-view="driver" aria-hidden="true">🛵 Espace livreur</button><button class="tab hidden" data-view="admin" aria-hidden="true">🛡️ Administration</button></div>
 <section id="client" class="view">
 <div class="grid">
 <div class="card"><h3>Créer une demande</h3><p class="sub">Décrivez votre course et proposez le montant que vous souhaitez payer pour la livraison.</p>
@@ -97,8 +97,9 @@ function applyAccess(session) {
   const role = currentRole || "client";
   tabs.forEach(tab => {
     const view = tab.dataset.view;
-    const allowed = view === "client" || (view === "driver" && role === "courier") || (view === "admin" && role === "admin");
+    const allowed = view === "client" || (!!session && view === "driver" && role === "courier") || (!!session && view === "admin" && role === "admin");
     tab.classList.toggle("hidden", !allowed);
+    tab.setAttribute("aria-hidden", String(!allowed));
   });
   document.querySelectorAll(".view").forEach(view => {
     const allowed = view.id === "client" || (view.id === "driver" && role === "courier") || (view.id === "admin" && role === "admin");
