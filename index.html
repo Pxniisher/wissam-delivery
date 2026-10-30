@@ -280,7 +280,7 @@ window.wissamPayCash = async function(orderId){
   catch(e){if(msg){msg.textContent="Impossible d'enregistrer ce choix : "+(e?.message||"erreur inconnue");msg.style.color="#ff8f8f";}}
 };
 // Estimation indicative fondée sur les distances routières (OpenStreetMap / OSRM).
-const WISSAM_ORIGIN = "Mairie de Notre-Dame-de-Bondeville, place Victor-Schœlcher, 76960 Notre-Dame-de-Bondeville, France";
+const WISSAM_ORIGIN = "Notre-Dame-de-Bondeville, Seine-Maritime, France";
 const geocodeCache = new Map();
 async function geocodeAddress(address) {
   const key=address.trim().toLowerCase();
@@ -289,6 +289,12 @@ async function geocodeAddress(address) {
   const response=await fetch(url,{headers:{Accept:"application/json"}});
   if(!response.ok) throw new Error("Le service de recherche d’adresses est momentanément indisponible.");
   const results=await response.json();
+  if(!results.length && address===WISSAM_ORIGIN){
+    // Repli sur le nom de la commune si le géocodeur ne trouve pas le libellé exact de la mairie.
+    const fallback="https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=fr&q="+encodeURIComponent("Notre-Dame-de-Bondeville, France");
+    const retry=await fetch(fallback,{headers:{Accept:"application/json"}});
+    if(retry.ok) results.push(...await retry.json());
+  }
   if(!results.length) throw new Error("Adresse introuvable : "+address+". Ajoutez la ville et le code postal.");
   const point={lat:Number(results[0].lat),lon:Number(results[0].lon),label:results[0].display_name};
   geocodeCache.set(key,point);
