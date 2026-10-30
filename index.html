@@ -309,12 +309,13 @@ async function roadDistance(a,b) {
   return data.routes[0].distance/1000;
 }
 function deliveryPriceForKm(km) {
-  if(km<=3) return 5;
-  if(km<=5) return 6;
-  if(km<=8) return 8;
-  if(km<=12) return 10;
-  if(km<=15) return 12;
-  return 12+Math.ceil(km-15);
+  // Grille plus accessible, calculée sur la distance totale des deux trajets.
+  if(km<=3) return 4;
+  if(km<=5) return 5;
+  if(km<=8) return 6;
+  if(km<=12) return 7;
+  if(km<=15) return 8;
+  return 8+Math.ceil((km-15)*0.5);
 }
 window.wissamEstimatePrice = async function(){
   const pickup=$("pickup").value.trim(),dropoff=$("dropoff").value.trim();
