@@ -185,9 +185,10 @@ header:after{content:"";position:absolute;right:-70px;top:-130px;width:320px;hei
 <form id="orderForm" onsubmit="return false;">
 <label>Type de demande</label><select id="type"><option>Restaurant / repas</option><option>Courses / drive</option><option>Magasin / jeu vidéo</option><option>Colis / retrait</option><option>Autre demande</option></select>
 <label>Restaurant, magasin ou lieu de retrait</label><input id="pickup" placeholder="Ex. McDonald's Rouen, Leclerc Drive…" required>
-<label>Adresse de livraison</label><input id="dropoff" placeholder="Adresse complète" required>
+<label>Adresse de livraison</label><input id="dropoff" placeholder="Adresse complète, code postal et ville" autocomplete="street-address" required>
+<div class="notice" style="margin-top:12px"><b>Estimation automatique de la livraison</b><p class="small" style="margin:7px 0 10px">Le calcul inclut le trajet depuis la mairie de Notre-Dame-de-Bondeville jusqu’au magasin, puis du magasin jusqu’à vous. Le prix des articles n’est pas inclus.</p><button class="btn secondary" id="estimatePriceBtn" type="button">📍 Estimer le prix de livraison</button><div id="priceEstimateResult" class="small" role="status" style="margin-top:10px">Renseignez le magasin et l’adresse de livraison, puis lancez l’estimation.</div></div>
 <label>Détails de la demande</label><textarea id="details" placeholder="Votre commande, référence, instructions…"></textarea>
-<div class="row"><div><label>Votre prix proposé (€)</label><input id="price" type="number" min="1" step=".50" value="7" required></div><div><label>Quand ?</label><select id="timing" onchange="document.getElementById('scheduleFields').classList.toggle('hidden',this.value==='Maintenant')"><option>Maintenant</option><option>Réserver à l’avance</option></select></div></div>
+<div class="row"><div><label>Prix proposé pour la livraison (€)</label><input id="price" type="number" min="5" step=".50" value="5" required><p class="small">Minimum conseillé : 5 €. Vous pouvez ajuster le montant estimé.</p></div><div><label>Quand ?</label><select id="timing" onchange="document.getElementById('scheduleFields').classList.toggle('hidden',this.value==='Maintenant')"><option>Maintenant</option><option>Réserver à l’avance</option></select></div></div>
 <div id="scheduleFields" class="row hidden"><div><label>Date souhaitée</label><input id="date" type="date"></div><div><label>Créneau</label><select id="slot"><option>09 h – 10 h</option><option>10 h – 11 h</option><option>11 h – 12 h</option><option>14 h – 15 h</option><option>15 h – 16 h</option><option>16 h – 17 h</option><option>18 h – 19 h</option><option>19 h – 20 h</option></select></div></div>
 <div class="actions"><button class="btn" type="submit">Envoyer ma demande</button><button class="btn secondary" type="reset">Effacer</button></div>
 </form>
@@ -278,6 +279,61 @@ window.wissamPayCash = async function(orderId){
   try { const {data,error}=await supabase.functions.invoke("stripe-checkout",{body:{order_id:orderId,method:"cash"}}); if(error) throw error; if(data?.error) throw new Error(data.error); if(msg){msg.textContent="Choix enregistré : vous réglerez en main propre. Le livreur confirmera le paiement.";msg.style.color="#e8c56d";} const {data:{session}}=await supabase.auth.getSession(); if(session) await loadMyOrders(session.user.id); }
   catch(e){if(msg){msg.textContent="Impossible d'enregistrer ce choix : "+(e?.message||"erreur inconnue");msg.style.color="#ff8f8f";}}
 };
+// Estimation indicative fondée sur les distances routières (OpenStreetMap / OSRM).
+const WISSAM_ORIGIN = "Mairie de Notre-Dame-de-Bondeville, place Victor-Schœlcher, 76960 Notre-Dame-de-Bondeville, France";
+const geocodeCache = new Map();
+async function geocodeAddress(address) {
+  const key=address.trim().toLowerCase();
+  if(geocodeCache.has(key)) return geocodeCache.get(key);
+  const url="https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=fr&q="+encodeURIComponent(address);
+  const response=await fetch(url,{headers:{Accept:"application/json"}});
+  if(!response.ok) throw new Error("Le service de recherche d’adresses est momentanément indisponible.");
+  const results=await response.json();
+  if(!results.length) throw new Error("Adresse introuvable : "+address+". Ajoutez la ville et le code postal.");
+  const point={lat:Number(results[0].lat),lon:Number(results[0].lon),label:results[0].display_name};
+  geocodeCache.set(key,point);
+  return point;
+}
+async function roadDistance(a,b) {
+  const url="https://router.project-osrm.org/route/v1/driving/"+a.lon+","+a.lat+";"+b.lon+","+b.lat+"?overview=false&alternatives=false";
+  const response=await fetch(url);
+  if(!response.ok) throw new Error("Le calcul de l’itinéraire est momentanément indisponible.");
+  const data=await response.json();
+  if(data.code!=="Ok"||!data.routes?.length) throw new Error("Aucun itinéraire routier trouvé pour cette adresse.");
+  return data.routes[0].distance/1000;
+}
+function deliveryPriceForKm(km) {
+  if(km<=3) return 5;
+  if(km<=5) return 6;
+  if(km<=8) return 8;
+  if(km<=12) return 10;
+  if(km<=15) return 12;
+  return 12+Math.ceil(km-15);
+}
+window.wissamEstimatePrice = async function(){
+  const pickup=$("pickup").value.trim(),dropoff=$("dropoff").value.trim();
+  const result=$("priceEstimateResult"),button=$("estimatePriceBtn");
+  if(!pickup||!dropoff){result.textContent="Renseignez le nom et la ville du magasin, ainsi que l’adresse complète de livraison.";return;}
+  button.disabled=true;button.textContent="Calcul de l’itinéraire…";result.textContent="Recherche des adresses et calcul des distances routières…";
+  try {
+    const [origin,shop,client]=await Promise.all([
+      geocodeAddress(WISSAM_ORIGIN),
+      geocodeAddress(pickup),
+      geocodeAddress(dropoff)
+    ]);
+    const [toShop,shopToClient]=await Promise.all([roadDistance(origin,shop),roadDistance(shop,client)]);
+    const total=toShop+shopToClient;
+    const price=deliveryPriceForKm(total);
+    $("price").value=price.toFixed(2);
+    result.innerHTML="<b>Prix conseillé : "+price.toLocaleString("fr-FR",{style:"currency",currency:"EUR"})+"</b><br>Départ mairie → magasin : "+toShop.toLocaleString("fr-FR",{maximumFractionDigits:1})+" km<br>Magasin → client : "+shopToClient.toLocaleString("fr-FR",{maximumFractionDigits:1})+" km<br><b>Distance routière totale : "+total.toLocaleString("fr-FR",{maximumFractionDigits:1})+" km</b><br><span>Tarif indicatif de livraison uniquement. Articles non inclus. Vérifiez les adresses avant d’envoyer.</span>";
+  } catch(error) {
+    result.textContent=(error?.message||"L’estimation n’a pas pu être calculée.")+" Vous pouvez corriger les adresses et réessayer.";
+  } finally {
+    button.disabled=false;button.textContent="📍 Estimer le prix de livraison";
+  }
+};
+$("estimatePriceBtn")?.addEventListener("click",window.wissamEstimatePrice);
+
 window.wissamSubmitOrder = async function(){
   const button=document.querySelector("#orderForm button[type=submit]");
   try {
